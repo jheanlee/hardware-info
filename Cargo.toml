@@ -1,0 +1,20 @@
+[package]
+name = "hardware-info"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+authors = ["Jhe-An Lee <jheanlee2008@gmail.com>"]
+description = "A Library to fetch hardware information"
+repository = "https://github.com/jheanlee/hardware-info"
+license = "Apache-2.0"
+keywords = ["hardware"]
+categories = ["hardware-support", "os"]
+
+[lib]
+name = "hardware_info"
+
+[features]
+default = []
+
+[dependencies]
+
