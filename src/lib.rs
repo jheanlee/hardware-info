@@ -14,9 +14,56 @@
  * limitations under the License.
  */
 
-#![forbid(unsafe_code)]
 #![deny(missing_docs)]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
-#[cfg(test)]
+
+#[macro_use]
+mod macros;
+
+cfg_select! {
+    feature = "unknown-ci" => {
+        // This is used in CI to check that the build for unknown targets is compiling fine.
+        mod unknown;
+        use crate::unknown as sys;
+
+        #[cfg(test)]
+        pub(crate) const MIN_USERS: usize = 0;
+    }
+    any(
+        target_os = "macos", target_os = "linux",
+        target_os = "freebsd", target_os = "netbsd") =>
+    {
+        mod unix;
+        use crate::unix::sys as sys;
+    }
+    windows => {
+        mod windows;
+        use crate::windows as sys;
+    }
+    _ => {
+        mod unknown;
+        use crate::unknown as sys;
+    }
+}
+
+#[cfg(feature = "pci")]
+pub use crate::common::pci::{PciAddress, PciDevice, PciDeviceClass, PciDevices};
+pub use crate::error::Error;
+
+#[cfg(feature = "pci")]
+pub(crate) use crate::sys::{PciDeviceInner, PciDevicesInner};
+
+mod common;
+mod error;
+pub(crate) mod utils;
+
+// Make formattable by rustfmt.
+#[cfg(any())]
+mod unix;
+#[cfg(any())]
+mod unknown;
+#[cfg(any())]
+mod windows;
+
 mod tests {}
