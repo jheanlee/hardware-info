@@ -31,6 +31,11 @@ jobs:
                         cargo check
                         echo "===== no-default ====="
                         RUSTFLAGS="-D warnings" cargo check --no-default-features
+                        echo "===== debug ====="
+                        RUSTFLAGS="-D warnings" cargo check --no-default-features --features=debug
+                        echo "===== pci ====="
+                        RUSTFLAGS="-D warnings" cargo check --no-default-features --features=pci
+                        USTFLAGS="-D warnings" cargo check --no-default-features --features=debug,pci
                         echo "===== clippy ====="
                         cargo clippy -- -D warnings
                         echo "===== test ====="
