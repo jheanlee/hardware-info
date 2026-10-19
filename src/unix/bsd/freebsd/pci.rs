@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::unix::sys::ffi::{pci_conf, pci_conf_io};
+use crate::sys::ffi::{pci_conf, pci_conf_io};
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
 use std::mem::MaybeUninit;

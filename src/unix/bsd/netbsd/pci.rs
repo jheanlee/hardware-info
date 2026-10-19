@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-use crate::unix::bsd::ffi::{PCI_IO_DRVNAME_LEN, pci_drvname};
-use crate::unix::sys::ffi::{
-    PCI_BHLC_REG, PCI_CLASS_REG, PCI_HDRTYPE_MASK, PCI_HDRTYPE_SHIFT, PCI_ID_REG, PCI_IOC_BUSINFO,
-    PCI_SUBSYS_ID_REG, pcibus_conf_read, pciio_businfo,
+use crate::sys::ffi::{
+    PCI_BHLC_REG, PCI_CLASS_REG, PCI_HDRTYPE_MASK, PCI_HDRTYPE_SHIFT, PCI_ID_REG,
+    PCI_IO_DRVNAME_LEN, PCI_IOC_BUSINFO, PCI_SUBSYS_ID_REG, pci_drvname, pcibus_conf_read,
+    pciio_businfo,
 };
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
