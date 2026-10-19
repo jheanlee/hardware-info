@@ -4,7 +4,7 @@ on:
 name: Checks
 
 concurrency:
-    group: ${{ github.head_ref }}
+    group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
     cancel-in-progress: true
 
 jobs:
@@ -103,7 +103,7 @@ jobs:
     #                uses: ClementTsang/cargo-action@v0.0.7
     #                with:
     #                    command: rustc
-    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug, pci
+    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug,pci
     #                    use-cross: ${{ matrix.platform.cross }}
     #                    cross-version: 0.2.5
     #
@@ -111,7 +111,7 @@ jobs:
     #                uses: ClementTsang/cargo-action@v0.0.7
     #                with:
     #                    command: rustc
-    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features= pci
+    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=pci
     #                    use-cross: ${{ matrix.platform.cross }}
     #                    cross-version: 0.2.5
 
@@ -141,7 +141,7 @@ jobs:
                 run: cargo rustdoc -- -Z unstable-options --generate-link-to-definition
                 if: matrix.toolchain == 'nightly'
             -   name: Test full
-                run: cargo test --no-default-features
+                run: cargo test
                 env:
                     RUST_BACKTRACE: full
             -   name: Test no-default

@@ -1,0 +1,38 @@
+on:
+    pull_request:
+
+name: NetBSD
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    test:
+        name: Check and test on NetBSD
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Run NetBSD checks and tests
+                uses: vmactions/netbsd-vm@v1
+                with:
+                    usesh: true
+                    release: "10"
+                    prepare: |
+                        /usr/sbin/pkg_add -u curl
+                        curl https://sh.rustup.rs -sSf --output rustup.sh
+                        sh rustup.sh -y --profile=minimal --default-toolchain=1.95
+                        . $HOME/.cargo/env
+                        rustup --version
+                        rustup component add clippy
+                    run: |
+                        . $HOME/.cargo/env
+                        cargo check
+                        echo "===== no-default ====="
+                        RUSTFLAGS="-D warnings" cargo check --no-default-features
+                        echo "===== clippy ====="
+                        cargo clippy -- -D warnings
+                        echo "===== test ====="
+                        cargo test
+                        cargo test --no-default-features
