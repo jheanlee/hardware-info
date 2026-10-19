@@ -45,7 +45,7 @@ impl PciDeviceInner {
         unreachable!()
     }
 
-    pub(crate) fn vendor_id(&self) -> Option<u16> {
+    pub(crate) fn vendor_id(&self) -> u16 {
         unreachable!()
     }
 

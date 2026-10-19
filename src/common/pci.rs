@@ -171,7 +171,7 @@ impl PciDevice {
     ///     }
     /// }
     /// ```
-    pub fn vendor_id(&self) -> Option<u16> {
+    pub fn vendor_id(&self) -> u16 {
         self.inner.vendor_id()
     }
 

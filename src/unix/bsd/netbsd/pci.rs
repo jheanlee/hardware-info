@@ -99,6 +99,10 @@ pub fn refresh_pci_device(devices: &mut Vec<PciDevice>, remove_not_listed_device
                 if ret != 0 {
                     continue;
                 }
+                //  illegal vendor id
+                if id & 0xffff == 0xffff {
+                    continue;
+                }
 
                 let hdrtype_type = (((bhlcr) >> PCI_HDRTYPE_SHIFT) & PCI_HDRTYPE_MASK) & 0x7f;
                 let subsystem_id = if hdrtype_type == 0 {
@@ -292,8 +296,8 @@ impl crate::sys::PciDeviceInner {
         &self.address
     }
 
-    pub(crate) fn vendor_id(&self) -> Option<u16> {
-        Some(self.vendor_id)
+    pub(crate) fn vendor_id(&self) -> u16 {
+        self.vendor_id
     }
 
     pub(crate) fn vendor_name(&self) -> Option<&str> {

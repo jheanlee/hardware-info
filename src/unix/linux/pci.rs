@@ -41,8 +41,15 @@ fn refresh_pci_devices_list_from_sysfs(
             continue;
         };
 
-        let vendor = read_hex(parent, "vendor", &mut num_buf).map(|v| v as u16);
-        let vendor_name = vendor.and_then(pci_vendor_name).map(str::to_string);
+        let Some(vendor) = read_hex(parent, "vendor", &mut num_buf).map(|v| v as u16) else {
+            continue;
+        };
+        //  illegal vendor id
+        if vendor == 0xffff {
+            continue;
+        }
+
+        let vendor_name = pci_vendor_name(vendor).map(str::to_string);
         let device = read_hex(parent, "device", &mut num_buf).map(|v| v as u16);
         let subsystem_vendor = read_hex(parent, "subsystem_vendor", &mut num_buf).map(|v| v as u16);
         let subsystem_vendor_name = subsystem_vendor
@@ -104,7 +111,7 @@ fn refresh_pci_devices_list_from_sysfs(
 #[allow(clippy::too_many_arguments)]
 fn new_pci_device(
     address: PciAddress,
-    vendor_id: Option<u16>,
+    vendor_id: u16,
     vendor_name: Option<String>,
     device: Option<u16>,
     subsystem_vendor_id: Option<u16>,
@@ -153,7 +160,7 @@ impl PciDevicesInner {
 
 pub(crate) struct PciDeviceInner {
     address: PciAddress,
-    vendor_id: Option<u16>,
+    vendor_id: u16,
     vendor_name: Option<String>,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
@@ -170,7 +177,7 @@ impl PciDeviceInner {
         &self.address
     }
 
-    pub(crate) fn vendor_id(&self) -> Option<u16> {
+    pub(crate) fn vendor_id(&self) -> u16 {
         self.vendor_id
     }
 

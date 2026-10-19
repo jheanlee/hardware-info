@@ -99,6 +99,12 @@ fn refresh_pci_devices_from_ioctl(devices: &mut Vec<PciDevice>, remove_not_liste
             };
 
             let vendor_id = entry.pc_vendor;
+
+            //  illegal vendor id
+            if vendor_id == 0xffff {
+                continue;
+            }
+
             let device_id = entry.pc_device;
             let subsystem_vendor_id = entry.pc_subvendor;
             let subsystem_device_id = entry.pc_subdevice;
@@ -228,8 +234,8 @@ impl PciDeviceInner {
         &self.address
     }
 
-    pub(crate) fn vendor_id(&self) -> Option<u16> {
-        Some(self.vendor_id)
+    pub(crate) fn vendor_id(&self) -> u16 {
+        self.vendor_id
     }
 
     pub(crate) fn vendor_name(&self) -> Option<&str> {

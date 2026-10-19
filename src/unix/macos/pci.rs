@@ -58,7 +58,14 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
                 continue;
             };
 
-            let vendor_id = read_property_u32(entry, &vendor_id_key).map(|v| v as u16);
+            let Some(vendor_id) = read_property_u32(entry, &vendor_id_key).map(|v| v as u16) else {
+                continue;
+            };
+            //  illegal vendor id
+            if vendor_id == 0xffff {
+                continue;
+            }
+
             let device_id = read_property_u32(entry, &device_id_key).map(|v| v as u16);
             let subsystem_vendor_id =
                 read_property_u32(entry, &subsystem_vendor_id_key).map(|v| v as u16);
@@ -67,7 +74,7 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
             let class = read_property_u32(entry, &class_key).map(PciDeviceClass::from);
             let revision = read_property_u32(entry, &revision_key).map(|v| v as u8);
 
-            let vendor_name = vendor_id.and_then(pci_vendor_name).map(str::to_string);
+            let vendor_name = pci_vendor_name(vendor_id).map(str::to_string);
             let subsystem_vendor_name = subsystem_vendor_id
                 .and_then(pci_vendor_name)
                 .map(str::to_string);
@@ -175,7 +182,7 @@ unsafe fn read_property_data(entry: io_registry_entry_t, key: &CFString) -> Opti
 #[allow(clippy::too_many_arguments)]
 fn new_pci_device(
     address: PciAddress,
-    vendor_id: Option<u16>,
+    vendor_id: u16,
     vendor_name: Option<String>,
     device: Option<u16>,
     subsystem_vendor_id: Option<u16>,
@@ -218,7 +225,7 @@ impl PciDevicesInner {
 
 pub(crate) struct PciDeviceInner {
     address: PciAddress,
-    vendor_id: Option<u16>,
+    vendor_id: u16,
     vendor_name: Option<String>,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
@@ -234,7 +241,7 @@ impl PciDeviceInner {
         &self.address
     }
 
-    pub(crate) fn vendor_id(&self) -> Option<u16> {
+    pub(crate) fn vendor_id(&self) -> u16 {
         self.vendor_id
     }
 
