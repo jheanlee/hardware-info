@@ -1,0 +1,167 @@
+on:
+    pull_request:
+
+name: Checks
+
+concurrency:
+    group: ${{ github.head_ref }}
+    cancel-in-progress: true
+
+jobs:
+    rustfmt:
+        name: rustfmt
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Install toolchain
+                uses: dtolnay/rust-toolchain@stable
+                with:
+                    toolchain: stable
+                    components: rustfmt
+            -   name: Run rustfmt
+                run: cargo fmt -- --check
+
+    clippy:
+        name: Clippy (${{ matrix.platform.target }})
+        runs-on: ${{ matrix.platform.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                platform:
+                    - { os: 'ubuntu-24.04', target: 'x86_64-unknown-linux-gnu' }
+                    - { os: 'ubuntu-24.04-arm', target: 'aarch64-unknown-linux-gnu' }
+                    - { os: 'macos-15', target: 'aarch64-apple-darwin' }
+                    - { os: 'macos-15-intel', target: 'x86_64-apple-darwin' }
+                    - { os: 'windows-2025', target: 'x86_64-pc-windows-msvc' }
+                    - { os: 'windows-11-arm', target: 'aarch64-pc-windows-msvc' }
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Install toolchain
+                uses: dtolnay/rust-toolchain@stable
+                with:
+                    toolchain: nightly
+                    components: clippy
+            -   run: cargo clippy --all-targets -- -D warnings
+
+    check:
+        name: Check ${{ matrix.platform.target }} (${{ matrix.toolchain }})
+        runs-on: ${{ matrix.platform.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                toolchain:
+                    - "1.95.0"
+                platform:
+                    - { os: 'ubuntu-24.04', target: 'x86_64-unknown-linux-gnu', cross: false }
+                    - { os: 'ubuntu-24.04', target: 'x86_64-unknown-linux-musl', cross: true }
+                    - { os: 'ubuntu-24.04-arm', target: 'aarch64-unknown-linux-gnu', cross: false }
+                    - { os: 'ubuntu-24.04', target: 'aarch64-unknown-linux-musl', cross: true }
+                    - { os: 'ubuntu-24.04', target: 'armv7-unknown-linux-gnueabihf',  cross: true }
+                    - { os: 'ubuntu-24.04', target: 'armv7-unknown-linux-musleabihf', cross: true }
+                    - { os: 'macos-15', target: 'aarch64-apple-darwin', cross: false }
+                    - { os: 'macos-15-intel', target: 'x86_64-apple-darwin', cross: false }
+                    - { os: 'windows-2025', target: 'x86_64-pc-windows-msvc', cross: false }
+                    - { os: 'windows-11-arm', target: 'aarch64-pc-windows-msvc', cross: false }
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Install toolchain
+                uses: dtolnay/rust-toolchain@stable
+                with:
+                    toolchain: ${{matrix.toolchain}}
+            -   name: Install cross-target
+                run: rustup target add ${{ matrix.platform.target }}
+
+            -   name: Check
+                uses: ClementTsang/cargo-action@v0.0.7
+                with:
+                    command: rustc
+                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml
+                    use-cross: ${{ matrix.platform.cross }}
+                    cross-version: 0.2.5
+
+            -   name: Check no-default
+                uses: ClementTsang/cargo-action@v0.0.7
+                with:
+                    command: rustc
+                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features
+                    use-cross: ${{ matrix.platform.cross }}
+                    cross-version: 0.2.5
+
+    # not merged yet
+    #            -   name: Check debug feature
+    #                uses: ClementTsang/cargo-action@v0.0.7
+    #                with:
+    #                    command: rustc
+    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug
+    #                    use-cross: ${{ matrix.platform.cross }}
+    #                    cross-version: 0.2.5
+    #
+    #            -   name: Check debug, pci feature
+    #                uses: ClementTsang/cargo-action@v0.0.7
+    #                with:
+    #                    command: rustc
+    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug, pci
+    #                    use-cross: ${{ matrix.platform.cross }}
+    #                    cross-version: 0.2.5
+    #
+    #            -   name: Check pci feature
+    #                uses: ClementTsang/cargo-action@v0.0.7
+    #                with:
+    #                    command: rustc
+    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features= pci
+    #                    use-cross: ${{ matrix.platform.cross }}
+    #                    cross-version: 0.2.5
+
+    test:
+        needs: [ check ]
+        name: Test ${{ matrix.platform.target }} (${{ matrix.toolchain }})
+        runs-on: ${{ matrix.platform.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                toolchain:
+                    - "1.95.0"
+                    - nightly
+                platform:
+                    - { os: 'ubuntu-24.04', target: 'x86_64-unknown-linux-gnu' }
+                    - { os: 'macos-15', target: 'aarch64-apple-darwin' }
+                    - { os: 'macos-15-intel', target: 'x86_64-apple-darwin' }
+                    - { os: 'windows-2025', target: 'x86_64-pc-windows-msvc' }
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Install toolchain
+                uses: dtolnay/rust-toolchain@stable
+                with:
+                    toolchain: ${{matrix.toolchain}}
+            -   name: Check docs
+                run: cargo rustdoc -- -Z unstable-options --generate-link-to-definition
+                if: matrix.toolchain == 'nightly'
+            -   name: Test full
+                run: cargo test --no-default-features
+                env:
+                    RUST_BACKTRACE: full
+            -   name: Test no-default
+                run: cargo test --no-default-features
+                env:
+                    RUST_BACKTRACE: full
+
+# not merged yet
+#    unknown-target:
+#        name: Check unknown target
+#        runs-on: ubuntu-24.04
+#        strategy:
+#            matrix:
+#                toolchain:
+#                    - "1.95.0"
+#        steps:
+#            -   uses: actions/checkout@v7
+#            -   uses: dtolnay/rust-toolchain@stable
+#                with:
+#                    toolchain: ${{ matrix.toolchain }}
+#                    components: clippy
+#            -   run: cargo clippy --features unknown-ci -- -D warnings
+#            -   run: cargo check --features unknown-ci
