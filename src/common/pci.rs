@@ -22,7 +22,7 @@ use std::cmp::Ordering;
 /// Interacting with PCI (Peripheral Component Interconnect) interfaces.
 ///
 /// ```no_run
-/// use hardware-info::PciDevices;
+/// use hardware_info::PciDevices;
 ///
 /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
 ///     for pci_device in pci_devices.list() {
@@ -40,7 +40,7 @@ impl PciDevices {
     /// If you want it to be filled directly, take a look at [`PciDevices::new_with_refreshed_list`].
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(mut pci_devices) = PciDevices::new() {
     ///     pci_devices.refresh(false);
@@ -58,7 +58,7 @@ impl PciDevices {
     /// Creates a new [`PciDevices`][crate::PciDevices`] type with the PCI device list loaded.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -75,7 +75,7 @@ impl PciDevices {
     /// Returns the disks list.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -127,7 +127,7 @@ impl std::ops::Deref for PciDevices {
 /// Type containing a PCI device's information.
 ///
 /// ```no_run
-/// use hardware-info::PciDevices;
+/// use hardware_info::PciDevices;
 ///
 /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
 ///     for pci_device in pci_devices.list() {
@@ -143,7 +143,7 @@ impl PciDevice {
     /// Returns the address of the PCI device.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -160,14 +160,11 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.vendor_id() {
-    ///             Some(vendor_id) => { println!("{:04x}", vendor_id); },
-    ///             None => { println!("Not available"); }
-    ///         }
+    ///         println!("{:04x}", pci_device.vendor_id());
     ///     }
     /// }
     /// ```
@@ -180,7 +177,7 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved or not found in the database.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -199,7 +196,7 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -223,7 +220,7 @@ impl PciDevice {
     /// to not `subsystem_*` fields.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -247,7 +244,7 @@ impl PciDevice {
     /// rather common for manufacturers to not `subsystem_*` fields.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -267,7 +264,7 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -287,7 +284,7 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -307,7 +304,7 @@ impl PciDevice {
     /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
@@ -329,7 +326,7 @@ impl PciDevice {
     /// ⚠️ Only implemented on Linux and NetBSD. This always return `None` on other systems.
     ///
     /// ```no_run
-    /// use hardware-info::PciDevices;
+    /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
