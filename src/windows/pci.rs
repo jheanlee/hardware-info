@@ -17,9 +17,9 @@ use crate::sys::utils::{parse_multi_string, parse_string};
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciDevice, PciDeviceClass};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
-    DIGCF_PRESENT, HDEVINFO, SETUP_DI_REGISTRY_PROPERTY, SP_DEVINFO_DATA, SPDRP_ADDRESS,
-    SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiEnumDeviceInfo, SetupDiGetClassDevsW,
-    SetupDiGetDeviceRegistryPropertyW,
+    DIGCF_ALLCLASSES, DIGCF_PRESENT, HDEVINFO, SETUP_DI_REGISTRY_PROPERTY, SP_DEVINFO_DATA,
+    SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiEnumDeviceInfo,
+    SetupDiGetClassDevsW, SetupDiGetDeviceRegistryPropertyW,
 };
 use windows::Win32::Foundation::{ERROR_NO_MORE_ITEMS, GetLastError};
 use windows::core::PCWSTR;
@@ -28,9 +28,12 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
     unsafe {
         const PCI_ENUMERATOR: &[u16] = &[b'P' as u16, b'C' as u16, b'I' as u16, 0];
 
-        let Ok(dev_info_set) =
-            SetupDiGetClassDevsW(None, PCWSTR(PCI_ENUMERATOR.as_ptr()), None, DIGCF_PRESENT)
-        else {
+        let Ok(dev_info_set) = SetupDiGetClassDevsW(
+            None,
+            PCWSTR(PCI_ENUMERATOR.as_ptr()),
+            None,
+            DIGCF_ALLCLASSES | DIGCF_PRESENT,
+        ) else {
             debug!("Failed to get device info set");
             return;
         };
@@ -76,7 +79,7 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 let id = id.to_ascii_uppercase();
 
                 if id.starts_with("PCI\\")
-                    && let Some(index) = id.find("CC\\")
+                    && let Some(index) = id.find("CC_")
                     && let Some((_, class_str)) = id.split_at_checked(index + 3)
                     && let class_str = format!("{class_str:0<6}")   //  either 4 digit or 6 digit hex
                     && let Ok(class_val) = u32::from_str_radix(class_str.as_str(), 16)
@@ -202,7 +205,7 @@ fn read_registry_property_vec(
         )
     };
 
-    if required == 0 || required > 255 {
+    if required == 0 || required > 512 {
         return None;
     }
 
@@ -231,19 +234,21 @@ fn read_registry_property_vec(
 fn parse_hardware_id(id: &str) -> Option<(u16, Option<u16>, Option<u16>, Option<u16>, Option<u8>)> {
     let id = id.to_ascii_uppercase();
 
-    if !id.starts_with("PCI\\") {
-        return None;
-    }
+    let id = id.strip_prefix("PCI\\")?;
 
-    let vendor = parse_hex(id.as_str(), "VEN_")? as u16;
-    let device = parse_hex(id.as_str(), "DEV_").map(|v| v as u16);
-    let subsystem = parse_hex(id.as_str(), "SUBSYS_");
-    let revision = parse_hex(id.as_str(), "REV_").map(|v| v as u8);
+    let vendor = parse_hex(id, "VEN_")? as u16;
+    let device = parse_hex(id, "DEV_").map(|v| v as u16);
+    let subsystem = parse_hex(id, "SUBSYS_");
+    let revision = parse_hex(id, "REV_").map(|v| v as u8);
 
     let subsystem_vendor = subsystem.map(|v| v as u16);
     let subsystem_device = subsystem.map(|v| (v >> 16) as u16);
 
-    Some((vendor, device, subsystem_vendor, subsystem_device, revision))
+    if vendor != 0xffff {
+        Some((vendor, device, subsystem_vendor, subsystem_device, revision))
+    } else {
+        None
+    }
 }
 
 fn parse_hex(str: &str, prefix: &str) -> Option<u64> {
