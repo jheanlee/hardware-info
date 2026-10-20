@@ -14,7 +14,34 @@ categories = ["hardware-support", "os"]
 name = "hardware_info"
 
 [features]
-default = []
+default = ["pci"]
+pci = [
+    "dep:objc2-core-foundation",
+    "objc2-core-foundation/CFDictionary",
+    "objc2-core-foundation/CFNumber",
+    "objc2-core-foundation/CFString",
+    "dep:objc2-io-kit",
+    "dep:windows",
+    "windows/Win32",
+    "windows/Win32_Devices",
+    "windows/Win32_Devices_DeviceAndDriverInstallation"
+]
+debug = ["libc/extra_traits"]
+# This feature is used on CI to simulate unknown/unsupported target.
+unknown-ci = []
 
 [dependencies]
+[target.'cfg(all(not(target_os = "unknown"), not(target_os = "windows")))'.dependencies]
+libc = "^0.2.173"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-core-foundation = { version = "0.3.2", optional = true, default-features = false, features = [
+    "std",
+] }
+objc2-io-kit = { version = "0.3.2", optional = true, default-features = false, features = [
+    "std",
+    "libc",
+] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = ">=0.62, <0.63", optional = true }

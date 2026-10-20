@@ -81,7 +81,6 @@ jobs:
                     args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml
                     use-cross: ${{ matrix.platform.cross }}
                     cross-version: 0.2.5
-
             -   name: Check no-default
                 uses: ClementTsang/cargo-action@v0.0.7
                 with:
@@ -89,31 +88,27 @@ jobs:
                     args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features
                     use-cross: ${{ matrix.platform.cross }}
                     cross-version: 0.2.5
-
-    # not merged yet
-    #            -   name: Check debug feature
-    #                uses: ClementTsang/cargo-action@v0.0.7
-    #                with:
-    #                    command: rustc
-    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug
-    #                    use-cross: ${{ matrix.platform.cross }}
-    #                    cross-version: 0.2.5
-    #
-    #            -   name: Check debug, pci feature
-    #                uses: ClementTsang/cargo-action@v0.0.7
-    #                with:
-    #                    command: rustc
-    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug,pci
-    #                    use-cross: ${{ matrix.platform.cross }}
-    #                    cross-version: 0.2.5
-    #
-    #            -   name: Check pci feature
-    #                uses: ClementTsang/cargo-action@v0.0.7
-    #                with:
-    #                    command: rustc
-    #                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=pci
-    #                    use-cross: ${{ matrix.platform.cross }}
-    #                    cross-version: 0.2.5
+            -   name: Check debug feature
+                uses: ClementTsang/cargo-action@v0.0.7
+                with:
+                    command: rustc
+                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug
+                    use-cross: ${{ matrix.platform.cross }}
+                    cross-version: 0.2.5
+            -   name: Check debug, pci feature
+                uses: ClementTsang/cargo-action@v0.0.7
+                with:
+                    command: rustc
+                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=debug,pci
+                    use-cross: ${{ matrix.platform.cross }}
+                    cross-version: 0.2.5
+            -   name: Check pci feature
+                uses: ClementTsang/cargo-action@v0.0.7
+                with:
+                    command: rustc
+                    args: --target=${{ matrix.platform.target }} --manifest-path=Cargo.toml --no-default-features --features=pci
+                    use-cross: ${{ matrix.platform.cross }}
+                    cross-version: 0.2.5
 
     test:
         needs: [ check ]
@@ -149,19 +144,20 @@ jobs:
                 env:
                     RUST_BACKTRACE: full
 
-# not merged yet
-#    unknown-target:
-#        name: Check unknown target
-#        runs-on: ubuntu-24.04
-#        strategy:
-#            matrix:
-#                toolchain:
-#                    - "1.95.0"
-#        steps:
-#            -   uses: actions/checkout@v7
-#            -   uses: dtolnay/rust-toolchain@stable
-#                with:
-#                    toolchain: ${{ matrix.toolchain }}
-#                    components: clippy
-#            -   run: cargo clippy --features unknown-ci -- -D warnings
-#            -   run: cargo check --features unknown-ci
+    unknown-target:
+        name: Check unknown target
+        runs-on: ubuntu-24.04
+        strategy:
+            matrix:
+                toolchain:
+                    - "1.95.0"
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Install toolchain
+                uses: dtolnay/rust-toolchain@stable
+                with:
+                    toolchain: ${{ matrix.toolchain }}
+                    components: clippy
+            -   run: cargo clippy --features unknown-ci -- -D warnings
+            -   run: cargo check --features unknown-ci
