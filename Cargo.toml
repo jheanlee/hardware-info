@@ -21,6 +21,10 @@ pci = [
     "objc2-core-foundation/CFNumber",
     "objc2-core-foundation/CFString",
     "dep:objc2-io-kit",
+    "dep:windows",
+    "windows/Win32",
+    "windows/Win32_Devices",
+    "windows/Win32_Devices_DeviceAndDriverInstallation"
 ]
 debug = ["libc/extra_traits"]
 # This feature is used on CI to simulate unknown/unsupported target.
@@ -38,3 +42,6 @@ objc2-io-kit = { version = "0.3.2", optional = true, default-features = false, f
     "std",
     "libc",
 ] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = ">=0.62, <0.63", optional = true }

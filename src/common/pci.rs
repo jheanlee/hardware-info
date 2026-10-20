@@ -321,7 +321,9 @@ impl PciDevice {
     /// On Linux, the value is the absolute path to the driver; `None` is means no driver for this
     /// PCI device (for example, host bridges).
     ///
-    /// On NetBSD, the value is the name of the driver
+    /// On NetBSD, the value is the name of the driver.
+    ///
+    /// On Windows, the value is the kernel driver service.
     ///
     /// ⚠️ Only implemented on Linux and NetBSD. This always return `None` on other systems.
     ///
@@ -372,7 +374,7 @@ pub struct PciAddress {
 impl PciAddress {
     /// The OS-defined PCI domain. (Sometimes known as the segment).
     ///
-    /// Returns `0` on macOS and NetBSD.
+    /// Returns `0` on macOS, NetBSD and Windows.
     pub fn domain(&self) -> u32 {
         self.domain
     }
