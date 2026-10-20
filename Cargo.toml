@@ -31,7 +31,7 @@ debug = ["libc/extra_traits"]
 unknown-ci = []
 
 [dependencies]
-[target.'cfg(not(target_os = "unknown"))'.dependencies]
+[target.'cfg(all(not(target_os = "unknown"), not(target_os = "windows")))'.dependencies]
 libc = "^0.2.173"
 
 [target.'cfg(target_os = "macos")'.dependencies]

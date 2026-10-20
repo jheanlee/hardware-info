@@ -27,11 +27,6 @@ cfg_select! {
 #[cfg(feature = "pci")]
 pub(crate) mod ffi;
 
-/// Returns `true` if this OS is supported.
-///
-/// To get a list of supported OSes, please refer to the [crate-level documentation](index.html).
-pub const IS_SUPPORTED_SYSTEM: bool = true;
-
 // Make formattable by rustfmt.
 #[cfg(any())]
 mod pci;

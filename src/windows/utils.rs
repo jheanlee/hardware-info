@@ -17,7 +17,9 @@
 #[cfg(feature = "pci")]
 pub(crate) fn parse_string(bytes: &[u8]) -> Option<String> {
     let words: Vec<u16> = bytes
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
         .take_while(|&word| word != 0)
         .collect();
@@ -28,7 +30,9 @@ pub(crate) fn parse_string(bytes: &[u8]) -> Option<String> {
 #[cfg(feature = "pci")]
 pub(crate) fn parse_multi_string(bytes: &[u8]) -> Vec<String> {
     let words: Vec<u16> = bytes
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
         .collect();
 
