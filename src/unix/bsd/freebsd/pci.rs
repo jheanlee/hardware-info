@@ -106,8 +106,8 @@ fn refresh_pci_devices_from_ioctl(devices: &mut Vec<PciDevice>, remove_not_liste
             }
 
             let device_id = entry.pc_device;
-            let subsystem_vendor_id = entry.pc_subvendor;
-            let subsystem_device_id = entry.pc_subdevice;
+            let mut subsystem_vendor_id = Some(entry.pc_subvendor);
+            let mut subsystem_device_id = Some(entry.pc_subdevice);
             let class = PciDeviceClass {
                 class: entry.pc_class,
                 subclass: entry.pc_subclass,
@@ -115,8 +115,16 @@ fn refresh_pci_devices_from_ioctl(devices: &mut Vec<PciDevice>, remove_not_liste
             };
             let revision = entry.pc_revid;
 
+            //  illegal vendor id
+            if subsystem_vendor_id == Some(0xffff) {
+                subsystem_vendor_id = None;
+                subsystem_device_id = None;
+            }
+
             let vendor_name = pci_vendor_name(vendor_id).map(str::to_string);
-            let subsystem_vendor_name = pci_vendor_name(subsystem_vendor_id).map(str::to_string);
+            let subsystem_vendor_name = subsystem_vendor_id
+                .and_then(pci_vendor_name)
+                .map(str::to_string);
 
             current_devices.push(new_pci_device(
                 address,
@@ -178,9 +186,9 @@ fn new_pci_device(
     vendor_id: u16,
     vendor_name: Option<String>,
     device_id: u16,
-    subsystem_vendor_id: u16,
+    subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
-    subsystem_device_id: u16,
+    subsystem_device_id: Option<u16>,
     class: PciDeviceClass,
     revision: u8,
 ) -> PciDevice {
@@ -221,9 +229,9 @@ pub(crate) struct PciDeviceInner {
     vendor_id: u16,
     vendor_name: Option<String>,
     device_id: u16,
-    subsystem_vendor_id: u16,
+    subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
-    subsystem_device_id: u16,
+    subsystem_device_id: Option<u16>,
     class: PciDeviceClass,
     revision: u8,
     updated: bool,
@@ -247,7 +255,7 @@ impl PciDeviceInner {
     }
 
     pub(crate) fn subsystem_vendor_id(&self) -> Option<u16> {
-        Some(self.subsystem_vendor_id)
+        self.subsystem_vendor_id
     }
 
     pub(crate) fn subsystem_vendor_name(&self) -> Option<&str> {
@@ -255,7 +263,7 @@ impl PciDeviceInner {
     }
 
     pub(crate) fn subsystem_device_id(&self) -> Option<u16> {
-        Some(self.subsystem_device_id)
+        self.subsystem_device_id
     }
 
     pub(crate) fn class(&self) -> Option<&PciDeviceClass> {

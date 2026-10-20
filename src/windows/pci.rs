@@ -241,8 +241,14 @@ fn parse_hardware_id(id: &str) -> Option<(u16, Option<u16>, Option<u16>, Option<
     let subsystem = parse_hex(id, "SUBSYS_");
     let revision = parse_hex(id, "REV_").map(|v| v as u8);
 
-    let subsystem_vendor = subsystem.map(|v| v as u16);
-    let subsystem_device = subsystem.map(|v| (v >> 16) as u16);
+    let mut subsystem_vendor = subsystem.map(|v| v as u16);
+    let mut subsystem_device = subsystem.map(|v| (v >> 16) as u16);
+
+    //  illegal vendor id
+    if subsystem_vendor == Some(0x0000) || subsystem_vendor == Some(0xffff) {
+        subsystem_vendor = None;
+        subsystem_device = None;
+    }
 
     if vendor != 0xffff {
         Some((vendor, device, subsystem_vendor, subsystem_device, revision))

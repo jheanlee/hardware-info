@@ -51,17 +51,26 @@ fn refresh_pci_devices_list_from_sysfs(
 
         let vendor_name = pci_vendor_name(vendor).map(str::to_string);
         let device = read_hex(parent, "device", &mut num_buf).map(|v| v as u16);
-        let subsystem_vendor = read_hex(parent, "subsystem_vendor", &mut num_buf).map(|v| v as u16);
-        let subsystem_vendor_name = subsystem_vendor
+        let mut subsystem_vendor =
+            read_hex(parent, "subsystem_vendor", &mut num_buf).map(|v| v as u16);
+        let mut subsystem_vendor_name = subsystem_vendor
             .and_then(pci_vendor_name)
             .map(str::to_string);
-        let subsystem_device = read_hex(parent, "subsystem_device", &mut num_buf).map(|v| v as u16);
+        let mut subsystem_device =
+            read_hex(parent, "subsystem_device", &mut num_buf).map(|v| v as u16);
         let class = read_hex(parent, "class", &mut num_buf).map(|v| PciDeviceClass::from(v as u32));
         let revision = read_hex(parent, "revision", &mut num_buf).map(|v| v as u8);
 
         let driver = std::fs::canonicalize(entry.path().join("driver"))
             .map(|v| v.to_string_lossy().to_string())
             .ok();
+
+        //  illegal vendor id
+        if subsystem_vendor == Some(0xffff) {
+            subsystem_vendor = None;
+            subsystem_vendor_name = None;
+            subsystem_device = None;
+        }
 
         if let Some(existing_device) = devices.iter_mut().find(|d| d.inner.address == *address) {
             let inner = &mut existing_device.inner;

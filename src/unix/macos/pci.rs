@@ -67,12 +67,18 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
             }
 
             let device_id = read_property_u32(entry, &device_id_key).map(|v| v as u16);
-            let subsystem_vendor_id =
+            let mut subsystem_vendor_id =
                 read_property_u32(entry, &subsystem_vendor_id_key).map(|v| v as u16);
-            let subsystem_device_id =
+            let mut subsystem_device_id =
                 read_property_u32(entry, &subsystem_device_id_key).map(|v| v as u16);
             let class = read_property_u32(entry, &class_key).map(PciDeviceClass::from);
             let revision = read_property_u32(entry, &revision_key).map(|v| v as u8);
+
+            //  illegal vendor id
+            if subsystem_vendor_id == Some(0xffff) {
+                subsystem_vendor_id = None;
+                subsystem_device_id = None;
+            }
 
             let vendor_name = pci_vendor_name(vendor_id).map(str::to_string);
             let subsystem_vendor_name = subsystem_vendor_id

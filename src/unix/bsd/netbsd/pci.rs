@@ -177,8 +177,14 @@ pub fn refresh_pci_device(devices: &mut Vec<PciDevice>, remove_not_listed_device
                 let vendor_id = id as u16;
                 let device_id = (id >> 16) as u16;
 
-                let subsystem_vendor_id = subsystem_id.map(|v| v as u16);
-                let subsystem_device_id = subsystem_id.map(|v| (v >> 16) as u16);
+                let mut subsystem_vendor_id = subsystem_id.map(|v| v as u16);
+                let mut subsystem_device_id = subsystem_id.map(|v| (v >> 16) as u16);
+
+                //  illegal vendor id
+                if subsystem_vendor_id == Some(0xffff) {
+                    subsystem_vendor_id = None;
+                    subsystem_device_id = None;
+                }
 
                 let vendor_name = pci_vendor_name(vendor_id).map(str::to_string);
                 let subsystem_vendor_name = subsystem_vendor_id
