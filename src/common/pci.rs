@@ -172,7 +172,7 @@ impl PciDevice {
 
     /// Returns the vendor name of the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved or not found in the database.
+    /// Returns `None` if the information cannot be retrieved or cannot be not found in the database.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -210,7 +210,7 @@ impl PciDevice {
     /// system integrating it), while the vendor is typically responsible for the device or chip.
     ///
     /// Returns `None` if the information cannot be retrieved. It is rather common for manufacturers
-    /// to not `subsystem_*` fields.
+    /// to not provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -233,8 +233,8 @@ impl PciDevice {
     /// The subsystem vendor is typically the manufacturer of the subsystem (i.e. the board or the
     /// system integrating it), while the vendor is typically responsible for the device or chip.
     ///
-    /// Returns `None` if the information cannot be retrieved or not found in the database. It is
-    /// rather common for manufacturers to not `subsystem_*` fields.
+    /// Returns `None` if the information cannot be retrieved or cannot be found in the database. It
+    /// is rather common for manufacturers to not provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -252,9 +252,10 @@ impl PciDevice {
     /// Returns the subsystem device ID of the PCI device.
     ///
     /// It is often used together with the subsystem vendor id to identify the system or board
-    /// implementation PCI device.
+    /// implementing the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved.
+    /// Returns `None` if the information cannot be retrieved. It is rather common for manufacturers
+    /// to not provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -311,14 +312,16 @@ impl PciDevice {
 
     /// Returns the driver used by the PCI device.
     ///
-    /// On Linux, the value is the absolute path to the driver; `None` is means no driver for this
-    /// PCI device (for example, host bridges).
+    /// On Linux, the value is the absolute path to the driver.
     ///
     /// On NetBSD, the value is the name of the driver.
     ///
     /// On Windows, the value is the kernel driver service.
     ///
-    /// ⚠️ Only implemented on Linux and NetBSD. This always return `None` on other systems.
+    /// On supported systems, `None` means that this PCI device does not have a driver (for example,
+    /// host bridges).
+    ///
+    /// ⚠️ Only implemented on Linux, NetBSD and Windows. This always returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -382,7 +385,7 @@ impl PciAddress {
         self.device
     }
 
-    /// The PCI programming function
+    /// The PCI function
     pub fn function(&self) -> u8 {
         self.function
     }
