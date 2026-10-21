@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 use crate::unix::macos::utils::{IOReleaser, MAIN_PORT};
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
@@ -132,31 +131,13 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
     }
 }
 
-//  pcidebug format: busNum:deviceNum:functionNum(secBusNum:subBusNum)
-//  https://github.com/apple-oss-distributions/IOPCIFamily/blob/main/IOPCIConfigurator.cpp#L730
 unsafe fn read_pci_address(entry: io_registry_entry_t, key: &CFString) -> Option<PciAddress> {
     if let Some(prop) =
         unsafe { IORegistryEntryCreateCFProperty(entry, Some(key), kCFAllocatorDefault, 0) }
         && let Ok(pcidebug) = prop.downcast::<CFString>()
+        && let pcidebug = pcidebug.to_string()
     {
-        let pcidebug = pcidebug.to_string();
-        let address = if pcidebug.contains('(') {
-            pcidebug.split_once('(').unwrap().0
-        } else {
-            pcidebug.as_str()
-        };
-        let mut parts = address.split(':');
-
-        let bus: u8 = parts.next()?.parse().ok()?;
-        let device: u8 = parts.next()?.parse().ok()?;
-        let function: u8 = parts.next()?.parse().ok()?;
-
-        Some(PciAddress {
-            domain: 0, //  TODO: probably does not exist on macOS, needs check.
-            bus,
-            device,
-            function,
-        })
+        parse_pcidebug(pcidebug.as_str())
     } else {
         None
     }
@@ -185,6 +166,30 @@ unsafe fn read_property_data(entry: io_registry_entry_t, key: &CFString) -> Opti
             None
         }
     }
+}
+
+//  `pcidebug` format: either `busNum:deviceNum:functionNum` or `busNum:deviceNum:functionNum(secBusNum:subBusNum)` (decimal)
+//  https://github.com/apple-oss-distributions/IOPCIFamily/blob/main/IOPCIConfigurator.cpp
+fn parse_pcidebug(pcidebug: &str) -> Option<PciAddress> {
+    let (address, _) = pcidebug.split_once('(').unwrap_or((pcidebug, ""));
+    let mut parts = address.split(':');
+    let bus: u8 = parts.next()?.parse().ok()?;
+    let device: u8 = parts.next()?.parse().ok()?;
+    let function: u8 = parts.next()?.parse().ok()?;
+
+    if device > 0x1f {
+        return None;
+    }
+    if function > 0x07 {
+        return None;
+    }
+
+    Some(PciAddress {
+        domain: 0,
+        bus,
+        device,
+        function,
+    })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -283,5 +288,60 @@ impl PciDeviceInner {
 
     pub(crate) fn driver(&self) -> Option<&str> {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::PciAddress;
+    use crate::unix::sys::pci::parse_pcidebug;
+
+    #[test]
+    fn test_parse_pcidebug() {
+        assert_eq!(
+            parse_pcidebug("1:2:3"),
+            Some(PciAddress {
+                domain: 0,
+                bus: 1,
+                device: 2,
+                function: 3
+            })
+        );
+
+        assert_eq!(
+            parse_pcidebug("128:31:7"),
+            Some(PciAddress {
+                domain: 0,
+                bus: 128,
+                device: 31,
+                function: 7
+            })
+        );
+
+        assert_eq!(
+            parse_pcidebug("1:2:3(4:5)"),
+            Some(PciAddress {
+                domain: 0,
+                bus: 1,
+                device: 2,
+                function: 3
+            })
+        );
+
+        assert_eq!(
+            parse_pcidebug("255:31:7(1:2)"),
+            Some(PciAddress {
+                domain: 0,
+                bus: 255,
+                device: 31,
+                function: 7
+            })
+        );
+
+        assert_eq!(parse_pcidebug("256:31:7(1:2)"), None);
+        assert_eq!(parse_pcidebug("128:32:7(1:2)"), None);
+        assert_eq!(parse_pcidebug("128:31:8(1:2)"), None);
+        assert_eq!(parse_pcidebug("ff:1f:07"), None);
+        assert_eq!(parse_pcidebug("::"), None);
     }
 }
