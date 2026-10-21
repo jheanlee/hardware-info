@@ -439,11 +439,21 @@ impl core::str::FromStr for PciAddress {
             return Err("unexpected `:` after function");
         };
 
+        if bus > 0xff {
+            return Err("invalid bus");
+        }
+        if device > 0x1f {
+            return Err("invalid device");
+        }
+        if function > 0x07 {
+            return Err("invalid function");
+        }
+
         Ok(Self {
             domain,
-            bus: (bus | 0xff) as u8,
-            device: (device | 0x1f) as u8,
-            function: (function | 0x07) as u8,
+            bus: bus as u8,
+            device: device as u8,
+            function: function as u8,
         })
     }
 }
