@@ -66,7 +66,9 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
                 continue;
             }
 
-            let device_id = read_property_u32(entry, &device_id_key).map(|v| v as u16);
+            let Some(device_id) = read_property_u32(entry, &device_id_key).map(|v| v as u16) else {
+                continue;
+            };
             let mut subsystem_vendor_id =
                 read_property_u32(entry, &subsystem_vendor_id_key).map(|v| v as u16);
             let mut subsystem_device_id =
@@ -190,7 +192,7 @@ fn new_pci_device(
     address: PciAddress,
     vendor_id: u16,
     vendor_name: Option<String>,
-    device: Option<u16>,
+    device: u16,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
     subsystem_device: Option<u16>,
@@ -233,9 +235,9 @@ pub(crate) struct PciDeviceInner {
     address: PciAddress,
     vendor_id: u16,
     vendor_name: Option<String>,
+    device: u16,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
-    device: Option<u16>,
     subsystem_device: Option<u16>,
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
@@ -255,7 +257,7 @@ impl PciDeviceInner {
         self.vendor_name.as_deref()
     }
 
-    pub(crate) fn device_id(&self) -> Option<u16> {
+    pub(crate) fn device_id(&self) -> u16 {
         self.device
     }
 

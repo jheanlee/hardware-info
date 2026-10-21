@@ -231,13 +231,13 @@ fn read_registry_property_vec(
 
 //  Option<(vendor, device, subsystem_vendor, subsystem_device, revision)>
 #[allow(clippy::type_complexity)]
-fn parse_hardware_id(id: &str) -> Option<(u16, Option<u16>, Option<u16>, Option<u16>, Option<u8>)> {
+fn parse_hardware_id(id: &str) -> Option<(u16, u16, Option<u16>, Option<u16>, Option<u8>)> {
     let id = id.to_ascii_uppercase();
 
     let id = id.strip_prefix("PCI\\")?;
 
     let vendor = parse_hex(id, "VEN_")? as u16;
-    let device = parse_hex(id, "DEV_").map(|v| v as u16);
+    let device = parse_hex(id, "DEV_")? as u16;
     let subsystem = parse_hex(id, "SUBSYS_");
     let revision = parse_hex(id, "REV_").map(|v| v as u8);
 
@@ -268,7 +268,7 @@ fn new_pci_device(
     address: PciAddress,
     vendor_id: u16,
     vendor_name: Option<String>,
-    device: Option<u16>,
+    device: u16,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
     subsystem_device: Option<u16>,
@@ -325,7 +325,7 @@ pub(crate) struct PciDeviceInner {
     address: PciAddress,
     vendor_id: u16,
     vendor_name: Option<String>,
-    device: Option<u16>,
+    device: u16,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
     subsystem_device: Option<u16>,
@@ -348,7 +348,7 @@ impl PciDeviceInner {
         self.vendor_name.as_deref()
     }
 
-    pub(crate) fn device_id(&self) -> Option<u16> {
+    pub(crate) fn device_id(&self) -> u16 {
         self.device
     }
 

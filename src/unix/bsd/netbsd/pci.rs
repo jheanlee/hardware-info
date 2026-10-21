@@ -310,8 +310,8 @@ impl crate::sys::PciDeviceInner {
         self.vendor_name.as_deref()
     }
 
-    pub(crate) fn device_id(&self) -> Option<u16> {
-        Some(self.device_id)
+    pub(crate) fn device_id(&self) -> u16 {
+        self.device_id
     }
 
     pub(crate) fn subsystem_vendor_id(&self) -> Option<u16> {

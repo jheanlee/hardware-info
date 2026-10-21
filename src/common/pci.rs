@@ -157,8 +157,6 @@ impl PciDevice {
 
     /// Returns the vendor ID of the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved.
-    ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
@@ -193,21 +191,16 @@ impl PciDevice {
     ///
     /// It is often used together with the vendor ID to identify the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved.
-    ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.device_id() {
-    ///             Some(device_id) => { println!("{:04x}", device_id); },
-    ///             None => { println!("Not available"); }
-    ///         }
+    ///         println!("{:04x}", pci_device.device_id());
     ///     }
     /// }
     /// ```
-    pub fn device_id(&self) -> Option<u16> {
+    pub fn device_id(&self) -> u16 {
         self.inner.device_id()
     }
 

@@ -48,14 +48,11 @@ fn refresh_pci_devices_list_from_sysfs(
         if vendor == 0xffff {
             continue;
         }
-
-        let vendor_name = pci_vendor_name(vendor).map(str::to_string);
-        let device = read_hex(parent, "device", &mut num_buf).map(|v| v as u16);
+        let Some(device) = read_hex(parent, "device", &mut num_buf).map(|v| v as u16) else {
+            continue;
+        };
         let mut subsystem_vendor =
             read_hex(parent, "subsystem_vendor", &mut num_buf).map(|v| v as u16);
-        let mut subsystem_vendor_name = subsystem_vendor
-            .and_then(pci_vendor_name)
-            .map(str::to_string);
         let mut subsystem_device =
             read_hex(parent, "subsystem_device", &mut num_buf).map(|v| v as u16);
         let class = read_hex(parent, "class", &mut num_buf).map(|v| PciDeviceClass::from(v as u32));
@@ -64,6 +61,11 @@ fn refresh_pci_devices_list_from_sysfs(
         let driver = std::fs::canonicalize(entry.path().join("driver"))
             .map(|v| v.to_string_lossy().to_string())
             .ok();
+
+        let vendor_name = pci_vendor_name(vendor).map(str::to_string);
+        let mut subsystem_vendor_name = subsystem_vendor
+            .and_then(pci_vendor_name)
+            .map(str::to_string);
 
         //  illegal vendor id
         if subsystem_vendor == Some(0xffff) {
@@ -122,7 +124,7 @@ fn new_pci_device(
     address: PciAddress,
     vendor_id: u16,
     vendor_name: Option<String>,
-    device: Option<u16>,
+    device: u16,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
     subsystem_device: Option<u16>,
@@ -173,7 +175,7 @@ pub(crate) struct PciDeviceInner {
     vendor_name: Option<String>,
     subsystem_vendor_id: Option<u16>,
     subsystem_vendor_name: Option<String>,
-    device: Option<u16>,
+    device: u16,
     subsystem_device: Option<u16>,
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
@@ -194,7 +196,7 @@ impl PciDeviceInner {
         self.vendor_name.as_deref()
     }
 
-    pub(crate) fn device_id(&self) -> Option<u16> {
+    pub(crate) fn device_id(&self) -> u16 {
         self.device
     }
 
