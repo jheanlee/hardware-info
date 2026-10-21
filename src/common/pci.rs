@@ -200,14 +200,11 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.device_id() {
-    ///             Some(device_id) => { println!("{:04x}", device_id); },
-    ///             None => { println!("Not available"); }
-    ///         }
+    ///         println!("{:04x}", pci_device.device_id());
     ///     }
     /// }
     /// ```
-    pub fn device_id(&self) -> Option<u16> {
+    pub fn device_id(&self) -> u16 {
         self.inner.device_id()
     }
 
