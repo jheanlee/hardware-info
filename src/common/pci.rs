@@ -157,8 +157,6 @@ impl PciDevice {
 
     /// Returns the vendor ID of the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved.
-    ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
@@ -192,8 +190,6 @@ impl PciDevice {
     /// Returns the device ID of the PCI device.
     ///
     /// It is often used together with the vendor ID to identify the PCI device.
-    ///
-    /// Returns `None` if the information cannot be retrieved.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
