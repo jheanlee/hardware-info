@@ -34,3 +34,48 @@ pub(crate) fn read_hex<P: AsRef<std::path::Path>>(
     }
     None
 }
+
+//  Adapted from `sysinfo`:
+//  https://github.com/GuillaumeGomez/sysinfo
+//  Original code licensed under the MIT License. See `THIRD-PARTY-LICENSES` at the project root.
+#[cfg(feature = "pci")]
+pub(crate) fn read_unsigned<P: AsRef<std::path::Path>>(
+    parent: P,
+    path: &str,
+    data: &mut [u8],
+) -> Option<u64> {
+    if let Ok(mut f) = std::fs::File::open(parent.as_ref().join(path))
+        && let Ok(size) = f.read(data)
+    {
+        let mut i = 0;
+        let mut ret = 0;
+
+        while i < size && i < data.len() && data[i] >= b'0' && data[i] <= b'9' {
+            ret *= 10;
+            ret += (data[i] - b'0') as u64;
+            i += 1;
+        }
+        return Some(ret);
+    }
+    None
+}
+
+//  Adapted from `sysinfo`:
+//  https://github.com/GuillaumeGomez/sysinfo
+//  Original code licensed under the MIT License. See `THIRD-PARTY-LICENSES` at the project root.
+#[cfg(feature = "pci")]
+#[allow(clippy::ptr_arg)]
+pub(crate) fn read_str<'data, P: AsRef<std::path::Path>>(
+    parent: P,
+    path: &str,
+    data: &'data mut Vec<u8>,
+) -> &'data [u8] {
+    data.clear();
+    if let Ok(mut f) = std::fs::File::open(parent.as_ref().join(path))
+        && let Ok(size) = f.read_to_end(data)
+    {
+        &mut data[..size]
+    } else {
+        b""
+    }
+}

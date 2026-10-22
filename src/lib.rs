@@ -50,7 +50,7 @@ cfg_select! {
 pub use crate::sys::IS_SUPPORTED_SYSTEM;
 
 #[cfg(feature = "pci")]
-pub use crate::common::pci::{PciAddress, PciDevice, PciDeviceClass, PciDevices};
+pub use crate::common::pci::{PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevices};
 pub use crate::error::Error;
 
 #[cfg(feature = "pci")]

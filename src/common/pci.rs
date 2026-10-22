@@ -335,6 +335,82 @@ impl PciDevice {
     pub fn driver(&self) -> Option<&str> {
         self.inner.driver()
     }
+
+    /// Returns the negotiated bus speed of the device.
+    ///
+    /// Returns `None` if the information cannot be retrieved.
+    ///
+    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    ///
+    /// ```no_run
+    /// use hardware_info::PciDevices;
+    ///
+    /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
+    ///     for pci_device in pci_devices.list() {
+    ///         println!("{:?}", pci_device.current_bus_speed());
+    ///     }
+    /// }
+    /// ```
+    pub fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        self.inner.current_bus_speed()
+    }
+
+    /// Returns the maximum bus speed of the device.
+    ///
+    /// Returns `None` if the information cannot be retrieved.
+    ///
+    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    ///
+    /// ```no_run
+    /// use hardware_info::PciDevices;
+    ///
+    /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
+    ///     for pci_device in pci_devices.list() {
+    ///         println!("{:?}", pci_device.max_bus_speed());
+    ///     }
+    /// }
+    /// ```
+    pub fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        self.inner.max_bus_speed()
+    }
+
+    /// Returns the negotiated PCIe link width (lanes).
+    ///
+    /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
+    ///
+    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    ///
+    /// ```no_run
+    /// use hardware_info::PciDevices;
+    ///
+    /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
+    ///     for pci_device in pci_devices.list() {
+    ///         println!("{:?}", pci_device.current_link_width());
+    ///     }
+    /// }
+    /// ```
+    pub fn current_link_width(&self) -> Option<u32> {
+        self.inner.current_link_width()
+    }
+
+    /// Returns the maximum PCIe link width (lanes) supported by the device.
+    ///
+    /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
+    ///
+    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    ///
+    /// ```no_run
+    /// use hardware_info::PciDevices;
+    ///
+    /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
+    ///     for pci_device in pci_devices.list() {
+    ///         println!("{:?}", pci_device.max_link_width());
+    ///     }
+    /// }
+    /// ```
+    pub fn max_link_width(&self) -> Option<u32> {
+        self.inner.max_link_width()
+    }
 }
 
 impl PartialEq for PciDevice {
@@ -461,7 +537,7 @@ impl core::str::FromStr for PciAddress {
 /// Class information for a PCI device.
 ///
 /// PCI device classes are organized hierarchically: class > subclass > programming_interface.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PciDeviceClass {
     /// The PCI device class, identifying the general function of the PCI device.
     pub class: u8,
@@ -498,5 +574,74 @@ impl From<&PciDeviceClass> for u32 {
 impl std::fmt::Display for PciDeviceClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "0x{:06x}", u32::from(self))
+    }
+}
+
+/// PCI bus type and speed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PciBusSpeed {
+    /// Legacy PCI, clock speed 33 Mhz
+    Pci33Mhz,
+    /// Legacy PCI, clock speed 66 Mhz
+    Pci66Mhz,
+    /// PCI-X, clock speed 66 Mhz
+    PciX66Mhz,
+    /// PCI-X, clock speed 100 Mhz
+    PciX100Mhz,
+    /// PCI-X, clock speed 133 Mhz
+    PciX133Mhz,
+    /// PCI-X 266, clock speed 66 Mhz
+    PciX266_66Mhz,
+    /// PCI-X 266, clock speed 100 Mhz
+    PciX266_100Mhz,
+    /// PCI-X 266, clock speed 133 Mhz
+    PciX266_133Mhz,
+    /// PCI-X 533, clock speed 66 Mhz
+    PciX533_66Mhz,
+    /// PCI-X 533, clock speed 100 Mhz
+    PciX533_100Mhz,
+    /// PCI-X 533, clock speed 133 Mhz
+    PciX533_133Mhz,
+    /// AGP, unknown transfer rate
+    AgpUnknown,
+    /// AGP, 1x transfer rate (266 MB/s)
+    Agp1x,
+    /// AGP, 2x transfer rate (533 MB/s)
+    Agp2x,
+    /// AGP, 4x transfer rate (1066 MB/s)
+    Agp4x,
+    /// AGP, 8x transfer rate (2133 MB/s)
+    Agp8x,
+    /// PCIe, generation 1 (2.5 GT/s per lane)
+    PcieGen1,
+    /// PCIe, generation 2 (5.0 GT/s per lane)
+    PcieGen2,
+    /// PCIe, generation 3 (8.0 GT/s per lane)
+    PcieGen3,
+    /// PCIe, generation 4 (16.0 GT/s per lane)
+    PcieGen4,
+    /// PCIe, generation 5 (32.0 GT/s per lane)
+    PcieGen5,
+    /// PCIe, generation 6 (64.0 GT/s per lane)
+    PcieGen6,
+    /// PCIe, future/unknown generation. Contains the transfer rate in megatransfer per second (MT/s) per lane
+    PcieOther(u32),
+}
+
+impl PciBusSpeed {
+    /// Returns the transfer rate per lane corresponding to the PCIe generation.
+    ///
+    /// Returns `None` for non-PCIe values.
+    pub fn pcie_transfer_rate(self) -> Option<u32> {
+        match self {
+            PciBusSpeed::PcieGen1 => Some(2_500),
+            PciBusSpeed::PcieGen2 => Some(5_000),
+            PciBusSpeed::PcieGen3 => Some(8_000),
+            PciBusSpeed::PcieGen4 => Some(16_000),
+            PciBusSpeed::PcieGen5 => Some(32_000),
+            PciBusSpeed::PcieGen6 => Some(64_000),
+            PciBusSpeed::PcieOther(rate) => Some(rate),
+            _ => None,
+        }
     }
 }

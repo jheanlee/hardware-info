@@ -15,7 +15,7 @@
  */
 use crate::sys::utils::{parse_multi_string, parse_string};
 use crate::utils::pci_vendor_name;
-use crate::{Error, PciAddress, PciDevice, PciDeviceClass};
+use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
     DIGCF_ALLCLASSES, DIGCF_PRESENT, HDEVINFO, SETUP_DI_REGISTRY_PROPERTY, SP_DEVINFO_DATA,
     SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiEnumDeviceInfo,
@@ -374,5 +374,21 @@ impl PciDeviceInner {
 
     pub(crate) fn driver(&self) -> Option<&str> {
         self.driver.as_deref()
+    }
+
+    pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn current_link_width(&self) -> Option<u32> {
+        None
+    }
+
+    pub(crate) fn max_link_width(&self) -> Option<u32> {
+        None
     }
 }

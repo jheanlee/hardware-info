@@ -20,7 +20,7 @@ use crate::sys::ffi::{
     pciio_businfo,
 };
 use crate::utils::pci_vendor_name;
-use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
+use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevicesInner};
 use libc::{c_char, ioctl};
 use std::ffi::CStr;
 use std::fs::File;
@@ -336,5 +336,21 @@ impl crate::sys::PciDeviceInner {
 
     pub(crate) fn driver(&self) -> Option<&str> {
         self.driver.as_deref()
+    }
+
+    pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn current_link_width(&self) -> Option<u32> {
+        None
+    }
+
+    pub(crate) fn max_link_width(&self) -> Option<u32> {
+        None
     }
 }
