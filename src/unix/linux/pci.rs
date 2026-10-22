@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-use crate::unix::linux::utils::read_hex;
+use crate::sys::utils::{read_hex, read_str, read_unsigned};
 use crate::utils::pci_vendor_name;
-use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
+use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevicesInner};
 use std::path::Path;
 
 fn refresh_pci_devices_list_from_sysfs(
@@ -28,7 +28,8 @@ fn refresh_pci_devices_list_from_sysfs(
         return;
     };
 
-    let mut num_buf = [0u8; (u64::MAX.ilog(16) + 2) as usize + 2];
+    let mut num_buf = [0u8; (u64::MAX.ilog10() + 2) as usize + 2];
+    let mut str_buf = Vec::with_capacity(32);
 
     for entry in sys_dir.flatten() {
         let parent = &entry.path();
@@ -62,6 +63,25 @@ fn refresh_pci_devices_list_from_sysfs(
             .map(|v| v.to_string_lossy().to_string())
             .ok();
 
+        let current_link_speed =
+            str::from_utf8(read_str(parent, "current_link_speed", &mut str_buf))
+                .ok()
+                .and_then(parse_pci_link_speed);
+        let max_link_speed = str::from_utf8(read_str(parent, "max_link_speed", &mut str_buf))
+            .ok()
+            .and_then(parse_pci_link_speed);
+        let mut current_link_width =
+            read_unsigned(parent, "current_link_width", &mut num_buf).map(|v| v as u32);
+        let mut max_link_width =
+            read_unsigned(parent, "max_link_width", &mut num_buf).map(|v| v as u32);
+
+        if current_link_width == Some(0) || current_link_width == Some(255) {
+            current_link_width = None;
+        }
+        if max_link_width == Some(0) || max_link_width == Some(255) {
+            max_link_width = None;
+        }
+
         let vendor_name = pci_vendor_name(vendor).map(str::to_string);
         let mut subsystem_vendor_name = subsystem_vendor
             .and_then(pci_vendor_name)
@@ -86,6 +106,10 @@ fn refresh_pci_devices_list_from_sysfs(
             inner.class = class;
             inner.revision = revision;
             inner.driver = driver;
+            inner.current_bus_speed = current_link_speed;
+            inner.max_bus_speed = max_link_speed;
+            inner.current_link_width = current_link_width;
+            inner.max_link_width = max_link_width;
             inner.updated = true;
         } else {
             devices.push(new_pci_device(
@@ -99,6 +123,10 @@ fn refresh_pci_devices_list_from_sysfs(
                 class,
                 revision,
                 driver,
+                current_link_speed,
+                max_link_speed,
+                current_link_width,
+                max_link_width,
             ));
         }
     }
@@ -119,6 +147,43 @@ fn refresh_pci_devices_list_from_sysfs(
     }
 }
 
+fn parse_pci_link_speed(s: &str) -> Option<PciBusSpeed> {
+    match s.trim() {
+        "33 MHz PCI" => Some(PciBusSpeed::Pci33Mhz),
+        "66 MHz PCI" => Some(PciBusSpeed::Pci66Mhz),
+        "66 MHz PCI-X" => Some(PciBusSpeed::PciX66Mhz),
+        "100 MHz PCI-X" => Some(PciBusSpeed::PciX100Mhz),
+        "133 MHz PCI-X" => Some(PciBusSpeed::PciX133Mhz),
+        "66 MHz PCI-X 266" => Some(PciBusSpeed::PciX266_66Mhz),
+        "100 MHz PCI-X 266" => Some(PciBusSpeed::PciX266_100Mhz),
+        "133 MHz PCI-X 266" => Some(PciBusSpeed::PciX266_133Mhz),
+        "Unknown AGP" => Some(PciBusSpeed::AgpUnknown),
+        "1x AGP" => Some(PciBusSpeed::Agp1x),
+        "2x AGP" => Some(PciBusSpeed::Agp2x),
+        "4x AGP" => Some(PciBusSpeed::Agp4x),
+        "8x AGP" => Some(PciBusSpeed::Agp8x),
+        "66 MHz PCI-X 533" => Some(PciBusSpeed::PciX533_66Mhz),
+        "100 MHz PCI-X 533" => Some(PciBusSpeed::PciX533_100Mhz),
+        "133 MHz PCI-X 533" => Some(PciBusSpeed::PciX533_133Mhz),
+        "2.5 GT/s PCIe" => Some(PciBusSpeed::PcieGen1),
+        "5.0 GT/s PCIe" => Some(PciBusSpeed::PcieGen2),
+        "8.0 GT/s PCIe" => Some(PciBusSpeed::PcieGen3),
+        "16.0 GT/s PCIe" => Some(PciBusSpeed::PcieGen4),
+        "32.0 GT/s PCIe" => Some(PciBusSpeed::PcieGen5),
+        "64.0 GT/s PCIe" => Some(PciBusSpeed::PcieGen6),
+        s => {
+            //  try parse PCIe speed for future versions
+            let (whole, fraction) = s.split_once(" GT/s PCIe")?.0.split_once('.')?;
+            let mtps = whole
+                .parse::<u32>()
+                .ok()?
+                .saturating_mul(1000)
+                .saturating_add(fraction.parse::<u32>().ok()?.saturating_mul(100));
+            Some(PciBusSpeed::PcieOther(mtps))
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn new_pci_device(
     address: PciAddress,
@@ -131,6 +196,10 @@ fn new_pci_device(
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
     driver: Option<String>,
+    current_bus_speed: Option<PciBusSpeed>,
+    max_bus_speed: Option<PciBusSpeed>,
+    current_link_width: Option<u32>,
+    max_link_width: Option<u32>,
 ) -> PciDevice {
     PciDevice {
         inner: PciDeviceInner {
@@ -144,6 +213,10 @@ fn new_pci_device(
             class,
             revision,
             driver,
+            current_bus_speed,
+            max_bus_speed,
+            current_link_width,
+            max_link_width,
             updated: true,
         },
     }
@@ -180,6 +253,10 @@ pub(crate) struct PciDeviceInner {
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
     driver: Option<String>,
+    current_bus_speed: Option<PciBusSpeed>,
+    max_bus_speed: Option<PciBusSpeed>,
+    current_link_width: Option<u32>,
+    max_link_width: Option<u32>,
     updated: bool,
 }
 
@@ -222,5 +299,21 @@ impl PciDeviceInner {
 
     pub(crate) fn driver(&self) -> Option<&str> {
         self.driver.as_deref()
+    }
+
+    pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        self.current_bus_speed
+    }
+
+    pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        self.max_bus_speed
+    }
+
+    pub(crate) fn current_link_width(&self) -> Option<u32> {
+        self.current_link_width
+    }
+
+    pub(crate) fn max_link_width(&self) -> Option<u32> {
+        self.max_link_width
     }
 }

@@ -15,7 +15,7 @@
  */
 use crate::unix::macos::utils::{IOReleaser, MAIN_PORT};
 use crate::utils::pci_vendor_name;
-use crate::{Error, PciAddress, PciDevice, PciDeviceClass, PciDevicesInner};
+use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevicesInner};
 use objc2_core_foundation::{CFData, CFDictionary, CFRetained, CFString, kCFAllocatorDefault};
 use objc2_io_kit::{
     IOIteratorNext, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices,
@@ -287,6 +287,22 @@ impl PciDeviceInner {
     }
 
     pub(crate) fn driver(&self) -> Option<&str> {
+        None
+    }
+
+    pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        None
+    }
+
+    pub(crate) fn current_link_width(&self) -> Option<u32> {
+        None
+    }
+
+    pub(crate) fn max_link_width(&self) -> Option<u32> {
         None
     }
 }

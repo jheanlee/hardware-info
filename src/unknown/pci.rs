@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::{Error, PciAddress, PciDevice, PciDeviceClass};
+use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass};
 
 pub(crate) struct PciDevicesInner;
 
@@ -78,6 +78,22 @@ impl PciDeviceInner {
     }
 
     pub(crate) fn driver(&self) -> Option<&str> {
+        unreachable!()
+    }
+
+    pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
+        unreachable!()
+    }
+
+    pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
+        unreachable!()
+    }
+
+    pub(crate) fn current_link_width(&self) -> Option<u32> {
+        unreachable!()
+    }
+
+    pub(crate) fn max_link_width(&self) -> Option<u32> {
         unreachable!()
     }
 }
