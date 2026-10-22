@@ -242,6 +242,7 @@ impl PciDevicesInner {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct PciDeviceInner {
     address: PciAddress,
     vendor_id: u16,

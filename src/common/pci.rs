@@ -30,6 +30,7 @@ use std::cmp::Ordering;
 ///     }
 /// }
 /// ```
+#[derive(Clone)]
 pub struct PciDevices {
     pub(crate) inner: crate::PciDevicesInner,
 }
@@ -135,6 +136,7 @@ impl std::ops::Deref for PciDevices {
 ///     }
 /// }
 /// ```
+#[derive(Clone)]
 pub struct PciDevice {
     pub(crate) inner: crate::PciDeviceInner,
 }

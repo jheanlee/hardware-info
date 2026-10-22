@@ -34,6 +34,7 @@ cfg_select! {
 
 cfg_select! {
     feature = "pci" => {
+        #[derive(Clone)]
         pub(crate) struct PciDevicesInner {
             pub(crate) pci_devices: Vec<crate::PciDevice>,
         }
