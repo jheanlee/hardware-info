@@ -16,6 +16,7 @@
 
 use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass};
 
+#[derive(Clone)]
 pub(crate) struct PciDevicesInner;
 
 impl PciDevicesInner {
@@ -38,6 +39,7 @@ impl PciDevicesInner {
     pub(crate) fn refresh(&mut self, _: bool) {}
 }
 
+#[derive(Clone)]
 pub(crate) struct PciDeviceInner {}
 
 impl PciDeviceInner {

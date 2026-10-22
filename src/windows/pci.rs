@@ -293,6 +293,7 @@ fn new_pci_device(
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct PciDevicesInner {
     pub(crate) pci_devices: Vec<PciDevice>,
 }
@@ -321,6 +322,7 @@ impl PciDevicesInner {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct PciDeviceInner {
     address: PciAddress,
     vendor_id: u16,
