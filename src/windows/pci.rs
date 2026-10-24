@@ -18,11 +18,13 @@ use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
     DIGCF_ALLCLASSES, DIGCF_PRESENT, HDEVINFO, SETUP_DI_REGISTRY_PROPERTY, SP_DEVINFO_DATA,
-    SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiEnumDeviceInfo,
-    SetupDiGetClassDevsW, SetupDiGetDeviceRegistryPropertyW,
+    SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiDestroyDeviceInfoList,
+    SetupDiEnumDeviceInfo, SetupDiGetClassDevsW, SetupDiGetDevicePropertyW,
+    SetupDiGetDeviceRegistryPropertyW,
 };
-use windows::Win32::Foundation::{ERROR_NO_MORE_ITEMS, GetLastError};
-use windows::core::PCWSTR;
+use windows::Win32::Devices::Properties::{DEVPROP_TYPE_UINT32, DEVPROPTYPE};
+use windows::Win32::Foundation::{DEVPROPKEY, ERROR_NO_MORE_ITEMS, GetLastError};
+use windows::core::{GUID, PCWSTR};
 
 fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: bool) {
     unsafe {
@@ -115,6 +117,79 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 .and_then(pci_vendor_name)
                 .map(str::to_string);
 
+            let device_type = match read_device_property_u32(dev_info_set, &dev_info_data, 1) {
+                Some(0 | 6) => Some(DeviceType::Pci),
+                Some(1 | 7) => Some(DeviceType::PciX),
+                Some(2..=4 | 8..=12 | 14) => Some(DeviceType::PciE),
+                _ => None, //  can't get meaningful values for PCI-X as PCI (5) and PCIe as PCI (13)
+            };
+
+            let current_bus_speed = match device_type {
+                Some(DeviceType::Pci) => {
+                    match read_device_property_u32(dev_info_set, &dev_info_data, 2) {
+                        Some(0) => Some(PciBusSpeed::Pci33Mhz),
+                        Some(1) => Some(PciBusSpeed::Pci66Mhz),
+                        _ => None,
+                    }
+                }
+                Some(DeviceType::PciX) => {
+                    match read_device_property_u32(dev_info_set, &dev_info_data, 2) {
+                        Some(0x0) => None, // PCI-X as PCI
+                        Some(0x1 | 0x5) => Some(PciBusSpeed::PciX66Mhz),
+                        Some(0x2 | 0x6) => Some(PciBusSpeed::PciX100Mhz),
+                        Some(0x3 | 0x7) => Some(PciBusSpeed::PciX133Mhz),
+                        Some(0x9) => Some(PciBusSpeed::PciX266_66Mhz),
+                        Some(0xa) => Some(PciBusSpeed::PciX266_100Mhz),
+                        Some(0xb) => Some(PciBusSpeed::PciX266_133Mhz),
+                        Some(0xd) => Some(PciBusSpeed::PciX533_66Mhz),
+                        Some(0xe) => Some(PciBusSpeed::PciX533_100Mhz),
+                        Some(0xf) => Some(PciBusSpeed::PciX533_133Mhz),
+                        _ => None,
+                    }
+                }
+                Some(DeviceType::PciE) => {
+                    match read_device_property_u32(dev_info_set, &dev_info_data, 9) {
+                        Some(1) => Some(PciBusSpeed::PcieGen1),
+                        Some(2) => Some(PciBusSpeed::PcieGen2),
+                        Some(3) => Some(PciBusSpeed::PcieGen3),
+                        Some(4) => Some(PciBusSpeed::PcieGen4),
+                        Some(5) => Some(PciBusSpeed::PcieGen5),
+                        Some(6) => Some(PciBusSpeed::PcieGen6),
+                        _ => None, //  add future versions when available
+                    }
+                }
+                None => None,
+            };
+            let max_bus_speed = match device_type {
+                Some(DeviceType::Pci) => None,  //  not available on Windows
+                Some(DeviceType::PciX) => None, //  not available on Windows
+                Some(DeviceType::PciE) => {
+                    match read_device_property_u32(dev_info_set, &dev_info_data, 11) {
+                        Some(1) => Some(PciBusSpeed::PcieGen1),
+                        Some(2) => Some(PciBusSpeed::PcieGen2),
+                        Some(3) => Some(PciBusSpeed::PcieGen3),
+                        Some(4) => Some(PciBusSpeed::PcieGen4),
+                        Some(5) => Some(PciBusSpeed::PcieGen5),
+                        Some(6) => Some(PciBusSpeed::PcieGen6),
+                        _ => None, //  add future versions when available
+                    }
+                }
+                None => None,
+            };
+
+            let current_link_width = match device_type {
+                Some(DeviceType::PciE) => {
+                    read_device_property_u32(dev_info_set, &dev_info_data, 10)
+                }
+                _ => None,
+            };
+            let max_link_width = match device_type {
+                Some(DeviceType::PciE) => {
+                    read_device_property_u32(dev_info_set, &dev_info_data, 12)
+                }
+                _ => None,
+            };
+
             if let Some(existing_device) =
                 devices.iter_mut().find(|dev| dev.inner.address == address)
             {
@@ -128,6 +203,10 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 inner.class = class;
                 inner.revision = revision;
                 inner.driver = driver;
+                inner.current_bus_speed = current_bus_speed;
+                inner.max_bus_speed = max_bus_speed;
+                inner.current_link_width = current_link_width;
+                inner.max_link_width = max_link_width;
                 inner.updated = true;
             } else {
                 devices.push(new_pci_device(
@@ -141,9 +220,15 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                     class,
                     revision,
                     driver,
+                    current_bus_speed,
+                    max_bus_speed,
+                    current_link_width,
+                    max_link_width,
                 ));
             }
         }
+
+        let _ = SetupDiDestroyDeviceInfoList(dev_info_set);
     }
 
     if remove_not_listed_devices {
@@ -205,6 +290,7 @@ fn read_registry_property_vec(
         )
     };
 
+    //  a general buffer size check; increase if needed in the future
     if required == 0 || required > 512 {
         return None;
     }
@@ -263,6 +349,47 @@ fn parse_hex(str: &str, prefix: &str) -> Option<u64> {
         .and_then(|v| u64::from_str_radix(v, 16).ok())
 }
 
+fn read_device_property_u32(
+    dev_info_set: HDEVINFO,
+    dev_info_data: &SP_DEVINFO_DATA,
+    property_id: u32,
+) -> Option<u32> {
+    //  Windows SDK pciprop.h
+    //  DEFINE_PCI_DEVICE_DEVPKEY(_DevPkeyName, _Pid) macro
+    let property = DEVPROPKEY {
+        fmtid: GUID::from_u128(0x3ab22e31_8264_4b4e_9af5_a8d2d8e33e62),
+        pid: property_id,
+    };
+
+    let mut property_type = DEVPROPTYPE::default();
+    let mut required = std::mem::size_of::<u32>() as u32;
+    let mut buffer = [0u8; std::mem::size_of::<u32>()];
+
+    if unsafe {
+        SetupDiGetDevicePropertyW(
+            dev_info_set,
+            dev_info_data,
+            &property,
+            &mut property_type,
+            Some(&mut buffer),
+            Some(&mut required),
+            0,
+        )
+        .is_ok()
+    } && property_type == DEVPROP_TYPE_UINT32
+    {
+        Some(u32::from_le_bytes(buffer))
+    } else {
+        None
+    }
+}
+
+enum DeviceType {
+    Pci,
+    PciX,
+    PciE,
+}
+
 #[allow(clippy::too_many_arguments)]
 fn new_pci_device(
     address: PciAddress,
@@ -275,6 +402,10 @@ fn new_pci_device(
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
     driver: Option<String>,
+    current_bus_speed: Option<PciBusSpeed>,
+    max_bus_speed: Option<PciBusSpeed>,
+    current_link_width: Option<u32>,
+    max_link_width: Option<u32>,
 ) -> PciDevice {
     PciDevice {
         inner: PciDeviceInner {
@@ -288,6 +419,10 @@ fn new_pci_device(
             class,
             revision,
             driver,
+            current_bus_speed,
+            max_bus_speed,
+            current_link_width,
+            max_link_width,
             updated: true,
         },
     }
@@ -334,6 +469,10 @@ pub(crate) struct PciDeviceInner {
     class: Option<PciDeviceClass>,
     revision: Option<u8>,
     driver: Option<String>,
+    current_bus_speed: Option<PciBusSpeed>,
+    max_bus_speed: Option<PciBusSpeed>,
+    current_link_width: Option<u32>,
+    max_link_width: Option<u32>,
     updated: bool,
 }
 
@@ -379,18 +518,18 @@ impl PciDeviceInner {
     }
 
     pub(crate) fn current_bus_speed(&self) -> Option<PciBusSpeed> {
-        None
+        self.current_bus_speed
     }
 
     pub(crate) fn max_bus_speed(&self) -> Option<PciBusSpeed> {
-        None
+        self.max_bus_speed
     }
 
     pub(crate) fn current_link_width(&self) -> Option<u32> {
-        None
+        self.current_link_width
     }
 
     pub(crate) fn max_link_width(&self) -> Option<u32> {
-        None
+        self.max_link_width
     }
 }

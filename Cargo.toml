@@ -24,7 +24,8 @@ pci = [
     "dep:windows",
     "windows/Win32",
     "windows/Win32_Devices",
-    "windows/Win32_Devices_DeviceAndDriverInstallation"
+    "windows/Win32_Devices_DeviceAndDriverInstallation",
+    "windows/Win32_Devices_Properties"
 ]
 debug = ["libc/extra_traits"]
 # This feature is used on CI to simulate unknown/unsupported target.
