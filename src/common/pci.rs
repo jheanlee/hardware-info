@@ -100,14 +100,6 @@ impl From<PciDevices> for Vec<PciDevice> {
     }
 }
 
-impl From<Vec<PciDevice>> for PciDevices {
-    fn from(pci_devices: Vec<PciDevice>) -> Self {
-        Self {
-            inner: crate::PciDevicesInner::from_vec(pci_devices),
-        }
-    }
-}
-
 impl<'a> IntoIterator for &'a PciDevices {
     type Item = &'a PciDevice;
     type IntoIter = std::slice::Iter<'a, PciDevice>;

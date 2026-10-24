@@ -24,10 +24,6 @@ impl PciDevicesInner {
         Err(Error::Unsupported)
     }
 
-    pub(crate) fn from_vec(_: Vec<PciDevice>) -> Self {
-        Self
-    }
-
     pub(crate) fn into_vec(self) -> Vec<PciDevice> {
         Vec::new()
     }

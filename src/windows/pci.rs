@@ -434,10 +434,6 @@ pub(crate) struct PciDevicesInner {
 }
 
 impl PciDevicesInner {
-    pub(crate) fn from_vec(pci_devices: Vec<PciDevice>) -> Self {
-        Self { pci_devices }
-    }
-
     pub(crate) fn into_vec(self) -> Vec<PciDevice> {
         self.pci_devices
     }

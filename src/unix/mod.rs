@@ -40,10 +40,6 @@ cfg_select! {
         }
 
         impl PciDevicesInner {
-            pub(crate) fn from_vec(pci_devices: Vec<crate::PciDevice>) -> Self {
-                Self { pci_devices }
-            }
-
             pub(crate) fn into_vec(self) -> Vec<crate::PciDevice> {
                 self.pci_devices
             }
