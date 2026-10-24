@@ -342,7 +342,7 @@ impl PciDevice {
     ///
     /// Returns `None` if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -361,7 +361,7 @@ impl PciDevice {
     ///
     /// Returns `None` if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -380,7 +380,7 @@ impl PciDevice {
     ///
     /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -399,7 +399,7 @@ impl PciDevice {
     ///
     /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
