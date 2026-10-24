@@ -49,7 +49,7 @@ pub fn refresh_pci_device(devices: &mut Vec<PciDevice>, remove_not_listed_device
         let ret = unsafe { ioctl(interface.as_raw_fd(), PCI_IOC_BUSINFO, &mut pci_bus_info) };
         if ret < 0 {
             debug!("PCI_IOC_BUSINFO failed");
-            return;
+            continue;
         }
 
         if pci_bus_info.busno >= 256 || checked_bus[pci_bus_info.busno as usize] {
