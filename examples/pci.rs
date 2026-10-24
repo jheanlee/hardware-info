@@ -61,5 +61,28 @@ fn main() {
         println!("Revision: {}", format_optional(pci_device.revision()));
         println!("Device class: {}", format_optional(pci_device.class()));
         println!("Driver: {}", format_optional(pci_device.driver()));
+
+        let current_rate_per_lane = pci_device
+            .current_bus_speed()
+            .and_then(|speed| speed.pcie_transfer_rate());
+        let current_link_width = pci_device.current_link_width();
+        let max_rate_per_lane = pci_device
+            .max_bus_speed()
+            .and_then(|speed| speed.pcie_transfer_rate());
+        let max_link_width = pci_device.max_link_width();
+
+        if let Some(current_rate_per_lane) = current_rate_per_lane
+            && let Some(current_link_width) = current_link_width
+            && let Some(max_rate_per_lane) = max_rate_per_lane
+            && let Some(max_link_width) = max_link_width
+        {
+            println!(
+                "PCIe bus total speed: {}/{} MT/s",
+                current_rate_per_lane * current_link_width,
+                max_rate_per_lane * max_link_width
+            );
+        } else {
+            println!("PCIe bus total speed: not available");
+        }
     }
 }
