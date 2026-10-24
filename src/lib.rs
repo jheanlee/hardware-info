@@ -16,7 +16,11 @@
 
 #![deny(missing_docs)]
 #![deny(rustdoc::broken_intra_doc_links)]
-#![doc = include_str!("../README.md")]
+#![cfg_attr(all(feature = "pci"), doc = include_str!("../README.md"))]
+#![cfg_attr(
+    not(all(feature = "pci")),
+    doc = "For crate-level documentation, all features must be enabled."
+)]
 
 #[macro_use]
 mod macros;

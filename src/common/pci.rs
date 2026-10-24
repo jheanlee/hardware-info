@@ -73,7 +73,7 @@ impl PciDevices {
         Ok(pci_devices)
     }
 
-    /// Returns the disks list.
+    /// Returns the PCI devices list.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -320,10 +320,10 @@ impl PciDevice {
     ///
     /// On Windows, the value is the kernel driver service.
     ///
-    /// On supported systems, `None` means that this PCI device does not have a driver (for example,
-    /// host bridges).
+    /// Returns `None` if this PCI device does not have a driver (for example, host bridges) or
+    /// if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux, NetBSD and Windows. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux, NetBSD and Windows. Returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -342,7 +342,7 @@ impl PciDevice {
     ///
     /// Returns `None` if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. Returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -361,7 +361,7 @@ impl PciDevice {
     ///
     /// Returns `None` if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. Returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -380,7 +380,7 @@ impl PciDevice {
     ///
     /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. Returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -399,7 +399,7 @@ impl PciDevice {
     ///
     /// Returns `None` if this device is not a PCIe device or if the information cannot be retrieved.
     ///
-    /// ⚠️ Only implemented on Linux and Windows. This always returns `None` on other systems.
+    /// ⚠️ Only implemented on Linux and Windows. Returns `None` on other systems.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
@@ -579,12 +579,12 @@ impl std::fmt::Display for PciDeviceClass {
     }
 }
 
-/// PCI bus type and speed.
+/// PCI bus mode and speed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PciBusSpeed {
-    /// Legacy PCI, clock speed 33 Mhz
+    /// Conventional PCI, clock speed 33 Mhz
     Pci33Mhz,
-    /// Legacy PCI, clock speed 66 Mhz
+    /// Conventional PCI, clock speed 66 Mhz
     Pci66Mhz,
     /// PCI-X, clock speed 66 Mhz
     PciX66Mhz,
@@ -626,12 +626,13 @@ pub enum PciBusSpeed {
     PcieGen5,
     /// PCIe, generation 6 (64.0 GT/s per lane)
     PcieGen6,
-    /// PCIe, future/unknown generation. Contains the transfer rate in megatransfer per second (MT/s) per lane
+    /// PCIe, future/unknown generation. Contains the transfer rate in megatransfers per second (MT/s) per lane.
     PcieOther(u32),
 }
 
 impl PciBusSpeed {
-    /// Returns the transfer rate per lane corresponding to the PCIe generation.
+    /// Returns the transfer rate, in megatransfers per second (MT/s) per lane, corresponding to the
+    /// PCIe generation.
     ///
     /// Returns `None` for non-PCIe values.
     pub fn pcie_transfer_rate(self) -> Option<u32> {
