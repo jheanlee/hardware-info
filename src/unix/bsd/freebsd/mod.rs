@@ -18,9 +18,18 @@ cfg_select! {
     feature = "pci" => {
         pub mod pci;
 
-        pub(crate) use self::pci::{PciDeviceInner};
+        pub(crate) use self::pci::PciDeviceInner;
         pub(crate) use crate::unix::PciDevicesInner;
-    }
+    },
+    _ => {}
+}
+cfg_select! {
+    feature = "battery" => {
+        pub mod battery;
+
+        pub(crate) use self::battery::BatteryInner;
+        pub(crate) use crate::unix::BatteriesInner;
+    },
     _ => {}
 }
 
@@ -28,5 +37,7 @@ cfg_select! {
 pub(crate) mod ffi;
 
 // Make formattable by rustfmt.
+#[cfg(any())]
+mod battery;
 #[cfg(any())]
 mod pci;

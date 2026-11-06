@@ -56,7 +56,7 @@ impl PciDevices {
         })
     }
 
-    /// Creates a new [`PciDevices`][crate::PciDevices`] type with the PCI device list loaded.
+    /// Creates a new [`PciDevices`][`crate::PciDevices`] type with the PCI device list loaded.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;

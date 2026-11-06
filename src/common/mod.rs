@@ -16,3 +16,6 @@
 
 #[cfg(feature = "pci")]
 pub(crate) mod pci;
+
+#[cfg(feature = "battery")]
+pub(crate) mod battery;

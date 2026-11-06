@@ -44,7 +44,22 @@ cfg_select! {
                 self.pci_devices
             }
         }
-    }
+    },
+    _ => {}
+}
+cfg_select! {
+    feature = "battery" => {
+        #[derive(Clone)]
+        pub(crate) struct BatteriesInner {
+            pub(crate) batteries: Vec<crate::Battery>,
+        }
+
+        impl BatteriesInner {
+            pub(crate) fn into_vec(self) -> Vec<crate::Battery> {
+                self.batteries
+            }
+        }
+    },
     _ => {}
 }
 
