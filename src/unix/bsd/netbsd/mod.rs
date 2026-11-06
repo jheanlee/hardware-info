@@ -20,9 +20,22 @@ cfg_select! {
 
         pub(crate) use self::pci::{PciDeviceInner};
         pub(crate) use crate::unix::PciDevicesInner;
-    }
+    },
+    _ => {}
+}
+cfg_select! {
+    feature = "battery" => {
+        pub mod battery;
+
+        pub(crate) use self::battery::BatteryInner;
+        pub(crate) use crate::unix::BatteriesInner;
+    },
     _ => {}
 }
 
+#[cfg(any())]
+mod battery;
 #[cfg(feature = "pci")]
 pub mod ffi;
+#[cfg(any())]
+mod pci;

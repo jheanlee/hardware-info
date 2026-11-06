@@ -16,9 +16,9 @@
 
 #![deny(missing_docs)]
 #![deny(rustdoc::broken_intra_doc_links)]
-#![cfg_attr(all(feature = "pci"), doc = include_str!("../README.md"))]
+#![cfg_attr(all(feature = "pci", feature = "battery"), doc = include_str!("../README.md"))]
 #![cfg_attr(
-    not(all(feature = "pci")),
+    not(all(feature = "pci", feature = "battery")),
     doc = "For crate-level documentation, all features must be enabled."
 )]
 
@@ -33,18 +33,18 @@ cfg_select! {
 
         #[cfg(test)]
         pub(crate) const MIN_USERS: usize = 0;
-    }
+    },
     any(
         target_os = "macos", target_os = "linux",
         target_os = "freebsd", target_os = "netbsd") =>
     {
         mod unix;
         use crate::unix::sys as sys;
-    }
+    },
     windows => {
         mod windows;
         use crate::windows as sys;
-    }
+    },
     _ => {
         mod unknown;
         use crate::unknown as sys;
@@ -53,10 +53,14 @@ cfg_select! {
 
 pub use crate::sys::IS_SUPPORTED_SYSTEM;
 
+#[cfg(feature = "battery")]
+pub use crate::common::battery::{Batteries, Battery, BatteryStatus};
 #[cfg(feature = "pci")]
 pub use crate::common::pci::{PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevices};
 pub use crate::error::Error;
 
+#[cfg(feature = "battery")]
+pub(crate) use crate::sys::{BatteriesInner, BatteryInner};
 #[cfg(feature = "pci")]
 pub(crate) use crate::sys::{PciDeviceInner, PciDevicesInner};
 

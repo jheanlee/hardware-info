@@ -1,20 +1,20 @@
 [package]
 name = "hardware-info"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.95"
 authors = ["Jhe-An Lee <jheanlee2008@gmail.com>"]
-description = "A Library to fetch hardware information"
+description = "A Library for fetching hardware information"
 repository = "https://github.com/jheanlee/hardware-info"
 license = "Apache-2.0"
-keywords = ["hardware", "hardware-information", "system-information"]
+keywords = ["hardware", "hardware-information", "system-information", "pci", "battery"]
 categories = ["hardware-support", "os"]
 
 [lib]
 name = "hardware_info"
 
 [features]
-default = ["pci"]
+default = ["pci", "battery"]
 pci = [
     "dep:objc2-core-foundation",
     "objc2-core-foundation/CFDictionary",
@@ -27,6 +27,7 @@ pci = [
     "windows/Win32_Devices_DeviceAndDriverInstallation",
     "windows/Win32_Devices_Properties"
 ]
+battery = []
 debug = ["libc/extra_traits"]
 # This feature is used on CI to simulate unknown/unsupported target.
 unknown-ci = []
