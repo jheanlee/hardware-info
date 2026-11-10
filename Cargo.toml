@@ -27,7 +27,14 @@ pci = [
     "windows/Win32_Devices_DeviceAndDriverInstallation",
     "windows/Win32_Devices_Properties"
 ]
-battery = []
+battery = [
+    "dep:objc2-core-foundation",
+    "objc2-core-foundation/CFDictionary",
+    "objc2-core-foundation/CFNumber",
+    "objc2-core-foundation/CFString",
+    "dep:objc2-io-kit",
+    "objc2-io-kit/ps"
+]
 debug = ["libc/extra_traits"]
 # This feature is used on CI to simulate unknown/unsupported target.
 unknown-ci = []

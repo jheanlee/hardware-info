@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#[cfg(feature = "pci")]
+#[cfg(any(feature = "pci", feature = "battery"))]
 use std::io::Read;
 
 #[cfg(feature = "pci")]
@@ -38,7 +38,7 @@ pub(crate) fn read_hex<P: AsRef<std::path::Path>>(
 //  Adapted from `sysinfo`:
 //  https://github.com/GuillaumeGomez/sysinfo
 //  Original code licensed under the MIT License. See `THIRD-PARTY-LICENSES` at the project root.
-#[cfg(feature = "pci")]
+#[cfg(any(feature = "pci", feature = "battery"))]
 pub(crate) fn read_unsigned<P: AsRef<std::path::Path>>(
     parent: P,
     path: &str,
@@ -63,7 +63,7 @@ pub(crate) fn read_unsigned<P: AsRef<std::path::Path>>(
 //  Adapted from `sysinfo`:
 //  https://github.com/GuillaumeGomez/sysinfo
 //  Original code licensed under the MIT License. See `THIRD-PARTY-LICENSES` at the project root.
-#[cfg(feature = "pci")]
+#[cfg(any(feature = "pci", feature = "battery"))]
 #[allow(clippy::ptr_arg)]
 pub(crate) fn read_str<'data, P: AsRef<std::path::Path>>(
     parent: P,

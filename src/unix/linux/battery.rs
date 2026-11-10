@@ -15,7 +15,7 @@
  */
 
 use crate::sys::utils::{read_str, read_unsigned};
-use crate::{BatteriesInner, Battery, BatteryStatus, Error};
+use crate::{BatteriesInner, Battery, BatteryChargeStatus, Error};
 
 fn refresh_battery_list_from_sysfs(batteries: &mut Vec<Battery>, remove_not_listed_devices: bool) {
     let Ok(sys_dir) = std::fs::read_dir("/sys/class/power_supply") else {
@@ -35,13 +35,13 @@ fn refresh_battery_list_from_sysfs(batteries: &mut Vec<Battery>, remove_not_list
 
         if let Some(battery) = batteries.iter_mut().find(|v| v.inner.name == *name) {
             battery.inner.updated = false;
-            battery.refresh();
+            battery.inner.refresh();
         } else {
             let battery = batteries.push_mut(Battery {
                 inner: Default::default(),
             });
             battery.inner.name = name.clone();
-            battery.refresh();
+            battery.inner.refresh();
         }
     }
 
@@ -72,9 +72,9 @@ impl BatteriesInner {
         &self.batteries
     }
 
-    pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
-        &mut self.batteries
-    }
+    // pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
+    //     &mut self.batteries
+    // }
 
     pub(crate) fn refresh(&mut self, remove_not_listed_interfaces: bool) {
         refresh_battery_list_from_sysfs(&mut self.batteries, remove_not_listed_interfaces);
@@ -86,7 +86,7 @@ pub(crate) struct BatteryInner {
     pub(crate) name: String,
     pub(crate) manufacturer: Option<String>,
     pub(crate) model_name: Option<String>,
-    pub(crate) status: Option<BatteryStatus>,
+    pub(crate) status: Option<BatteryChargeStatus>,
     pub(crate) charge_now: Option<u64>,
     pub(crate) charge_full: Option<u64>,
     pub(crate) charge_empty: Option<u64>,
@@ -100,7 +100,7 @@ pub(crate) struct BatteryInner {
 }
 
 impl BatteryInner {
-    pub fn refresh(&mut self) {
+    pub(crate) fn refresh(&mut self) {
         let parent = format!("/sys/class/power_supply/{}", self.name);
         let parent = parent.as_str();
 
@@ -119,10 +119,10 @@ impl BatteryInner {
             .map(str::to_string);
 
         self.status = match read_str(parent, "status", &mut str_buf) {
-            b"Charging\n" => Some(BatteryStatus::Charging),
-            b"Discharging\n" => Some(BatteryStatus::Discharging),
-            b"Not charging\n" => Some(BatteryStatus::NotCharging),
-            b"Full\n" => Some(BatteryStatus::Full),
+            b"Charging\n" => Some(BatteryChargeStatus::Charging),
+            b"Discharging\n" => Some(BatteryChargeStatus::Discharging),
+            b"Not charging\n" => Some(BatteryChargeStatus::NotCharging),
+            b"Full\n" => Some(BatteryChargeStatus::Full),
             _ => None,
         };
 
@@ -152,7 +152,7 @@ impl BatteryInner {
         self.model_name.as_deref()
     }
 
-    pub fn status(&self) -> Option<BatteryStatus> {
+    pub fn charge_status(&self) -> Option<BatteryChargeStatus> {
         self.status
     }
 
