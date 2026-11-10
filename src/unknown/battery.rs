@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::{Battery, BatteryStatus, Error};
+use crate::{Battery, BatteryChargeStatus, Error};
 
 #[derive(Clone)]
 pub(crate) struct BatteriesInner;
@@ -28,9 +28,9 @@ impl BatteriesInner {
         &[]
     }
 
-    pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
-        &mut []
-    }
+    // pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
+    //     &mut []
+    // }
 
     pub(crate) fn into_vec(self) -> Vec<Battery> {
         Vec::new()
@@ -43,7 +43,7 @@ impl BatteriesInner {
 pub(crate) struct BatteryInner {}
 
 impl BatteryInner {
-    pub(crate) fn refresh(&mut self) {}
+    // pub(crate) fn refresh(&mut self) {}
 
     pub(crate) fn name(&self) -> &str {
         ""
@@ -57,7 +57,7 @@ impl BatteryInner {
         None
     }
 
-    pub(crate) fn status(&self) -> Option<BatteryStatus> {
+    pub(crate) fn charge_status(&self) -> Option<BatteryChargeStatus> {
         None
     }
 

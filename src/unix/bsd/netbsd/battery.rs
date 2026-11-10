@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::{BatteriesInner, Battery, BatteryStatus, Error};
+use crate::{BatteriesInner, Battery, BatteryChargeStatus, Error};
 
 impl BatteriesInner {
     pub(crate) fn new() -> Result<Self, Error> {
@@ -25,9 +25,9 @@ impl BatteriesInner {
         &[]
     }
 
-    pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
-        &mut []
-    }
+    // pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
+    //     &mut []
+    // }
 
     pub(crate) fn refresh(&mut self, _remove_not_listed_interfaces: bool) {}
 }
@@ -36,7 +36,7 @@ impl BatteriesInner {
 pub(crate) struct BatteryInner {}
 
 impl BatteryInner {
-    pub(crate) fn refresh(&mut self) {}
+    // pub(crate) fn refresh(&mut self) {}
 
     pub(crate) fn name(&self) -> &str {
         ""
@@ -50,7 +50,7 @@ impl BatteryInner {
         None
     }
 
-    pub(crate) fn status(&self) -> Option<BatteryStatus> {
+    pub(crate) fn charge_status(&self) -> Option<BatteryChargeStatus> {
         None
     }
 

@@ -54,7 +54,7 @@ cfg_select! {
 pub use crate::sys::IS_SUPPORTED_SYSTEM;
 
 #[cfg(feature = "battery")]
-pub use crate::common::battery::{Batteries, Battery, BatteryStatus};
+pub use crate::common::battery::{Batteries, Battery, BatteryChargeStatus};
 #[cfg(feature = "pci")]
 pub use crate::common::pci::{PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevices};
 pub use crate::error::Error;

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 use crate::unix::macos::utils::{IOReleaser, MAIN_PORT};
+use crate::unix::sys::utils::read_ioreg_property_data;
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass, PciDevicesInner};
-use objc2_core_foundation::{CFData, CFDictionary, CFRetained, CFString, kCFAllocatorDefault};
+use objc2_core_foundation::{CFDictionary, CFRetained, CFString, kCFAllocatorDefault};
 use objc2_io_kit::{
     IOIteratorNext, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices,
     IOServiceMatching, io_iterator_t, io_registry_entry_t, kIOReturnSuccess,
@@ -42,22 +43,14 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
             return;
         };
 
-        let address_key = CFString::from_str("pcidebug");
-        let vendor_id_key = CFString::from_str("vendor-id");
-        let device_id_key = CFString::from_str("device-id");
-        let subsystem_vendor_id_key = CFString::from_str("subsystem-vendor-id");
-        let subsystem_device_id_key = CFString::from_str("subsystem-id");
-        let class_key = CFString::from_str("class-code");
-        let revision_key = CFString::from_str("revision-id");
-
         while let Some(device) = IOReleaser::new(IOIteratorNext(iterator.inner())) {
             let entry: io_registry_entry_t = device.inner();
 
-            let Some(pci_address) = read_pci_address(entry, &address_key) else {
+            let Some(pci_address) = read_pci_address(entry) else {
                 continue;
             };
 
-            let Some(vendor_id) = read_property_u32(entry, &vendor_id_key).map(|v| v as u16) else {
+            let Some(vendor_id) = read_property_u32(entry, "vendor-id").map(|v| v as u16) else {
                 continue;
             };
             //  illegal vendor id
@@ -65,15 +58,15 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
                 continue;
             }
 
-            let Some(device_id) = read_property_u32(entry, &device_id_key).map(|v| v as u16) else {
+            let Some(device_id) = read_property_u32(entry, "device-id").map(|v| v as u16) else {
                 continue;
             };
             let mut subsystem_vendor_id =
-                read_property_u32(entry, &subsystem_vendor_id_key).map(|v| v as u16);
+                read_property_u32(entry, "subsystem-vendor-id").map(|v| v as u16);
             let mut subsystem_device_id =
-                read_property_u32(entry, &subsystem_device_id_key).map(|v| v as u16);
-            let class = read_property_u32(entry, &class_key).map(PciDeviceClass::from);
-            let revision = read_property_u32(entry, &revision_key).map(|v| v as u8);
+                read_property_u32(entry, "subsystem-id").map(|v| v as u16);
+            let class = read_property_u32(entry, "class-code").map(PciDeviceClass::from);
+            let revision = read_property_u32(entry, "revision-id").map(|v| v as u8);
 
             //  illegal vendor id
             if subsystem_vendor_id == Some(0xffff) {
@@ -131,10 +124,11 @@ fn refresh_pci_devices_from_ioreg(devices: &mut Vec<PciDevice>, remove_not_liste
     }
 }
 
-unsafe fn read_pci_address(entry: io_registry_entry_t, key: &CFString) -> Option<PciAddress> {
-    if let Some(prop) =
-        unsafe { IORegistryEntryCreateCFProperty(entry, Some(key), kCFAllocatorDefault, 0) }
-        && let Ok(pcidebug) = prop.downcast::<CFString>()
+unsafe fn read_pci_address(entry: io_registry_entry_t) -> Option<PciAddress> {
+    let address_key = CFString::from_str("pcidebug");
+    if let Some(prop) = unsafe {
+        IORegistryEntryCreateCFProperty(entry, Some(&address_key), kCFAllocatorDefault, 0)
+    } && let Ok(pcidebug) = prop.downcast::<CFString>()
         && let pcidebug = pcidebug.to_string()
     {
         parse_pcidebug(pcidebug.as_str())
@@ -143,8 +137,8 @@ unsafe fn read_pci_address(entry: io_registry_entry_t, key: &CFString) -> Option
     }
 }
 
-unsafe fn read_property_u32(entry: io_registry_entry_t, key: &CFString) -> Option<u32> {
-    let data = unsafe { read_property_data(entry, key)? };
+unsafe fn read_property_u32(entry: io_registry_entry_t, key: &str) -> Option<u32> {
+    let data = read_ioreg_property_data(entry, key)?;
 
     Some(u32::from_le_bytes([
         *data.first()?,
@@ -152,20 +146,6 @@ unsafe fn read_property_u32(entry: io_registry_entry_t, key: &CFString) -> Optio
         *data.get(2)?,
         *data.get(3)?,
     ]))
-}
-
-unsafe fn read_property_data(entry: io_registry_entry_t, key: &CFString) -> Option<Vec<u8>> {
-    unsafe {
-        let property = IORegistryEntryCreateCFProperty(entry, Some(key), kCFAllocatorDefault, 0)?;
-        let property = property.downcast::<CFData>().ok()?;
-        let property = property.as_bytes_unchecked();
-
-        if !property.is_empty() {
-            Some(property.to_vec())
-        } else {
-            None
-        }
-    }
 }
 
 //  `pcidebug` format: either `busNum:deviceNum:functionNum` or `busNum:deviceNum:functionNum(secBusNum:subBusNum)` (decimal)

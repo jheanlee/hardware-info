@@ -84,20 +84,20 @@ impl Batteries {
         self.inner.list()
     }
 
-    /// Returns the mutable batteries list.
-    ///
-    /// ```no_run
-    /// use hardware_info::Batteries;
-    ///
-    /// if let Ok(mut batteries) = Batteries::new_with_refreshed_list() {
-    ///     for battery in batteries.list_mut() {
-    ///         battery.refresh();
-    ///     }
-    /// }
-    /// ```
-    pub fn list_mut(&mut self) -> &mut [Battery] {
-        self.inner.list_mut()
-    }
+    // /// Returns the mutable batteries list.
+    // ///
+    // /// ```no_run
+    // /// use hardware_info::Batteries;
+    // ///
+    // /// if let Ok(mut batteries) = Batteries::new_with_refreshed_list() {
+    // ///     for battery in batteries.list_mut() {
+    // ///         battery.refresh();
+    // ///     }
+    // /// }
+    // /// ```
+    // pub fn list_mut(&mut self) -> &mut [Battery] {
+    //     self.inner.list_mut()
+    // }
 
     /// Refreshes the batteries' information.
     ///
@@ -131,14 +131,14 @@ impl<'a> IntoIterator for &'a Batteries {
     }
 }
 
-impl<'a> IntoIterator for &'a mut Batteries {
-    type Item = &'a mut Battery;
-    type IntoIter = std::slice::IterMut<'a, Battery>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.list_mut().iter_mut()
-    }
-}
+// impl<'a> IntoIterator for &'a mut Batteries {
+//     type Item = &'a mut Battery;
+//     type IntoIter = std::slice::IterMut<'a, Battery>;
+//
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.list_mut().iter_mut()
+//     }
+// }
 
 impl std::ops::Deref for Batteries {
     type Target = [Battery];
@@ -148,11 +148,11 @@ impl std::ops::Deref for Batteries {
     }
 }
 
-impl std::ops::DerefMut for Batteries {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.list_mut()
-    }
-}
+// impl std::ops::DerefMut for Batteries {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         self.list_mut()
+//     }
+// }
 
 #[derive(Clone)]
 /// Type containing a battery's information.
@@ -171,20 +171,20 @@ pub struct Battery {
 }
 
 impl Battery {
-    /// Refreshes the battery's information.
-    ///
-    /// ```no_run
-    /// use hardware_info::Batteries;
-    ///
-    /// if let Ok(mut batteries) = Batteries::new_with_refreshed_list() {
-    ///     for battery in batteries.list_mut() {
-    ///         battery.refresh();
-    ///     }
-    /// }
-    /// ```
-    pub fn refresh(&mut self) {
-        self.inner.refresh()
-    }
+    // /// Refreshes the battery's information.
+    // ///
+    // /// ```no_run
+    // /// use hardware_info::Batteries;
+    // ///
+    // /// if let Ok(mut batteries) = Batteries::new_with_refreshed_list() {
+    // ///     for battery in batteries.list_mut() {
+    // ///         battery.refresh();
+    // ///     }
+    // /// }
+    // /// ```
+    // pub fn refresh(&mut self) {
+    //     self.inner.refresh()
+    // }
 
     /// Returns the name of the battery.
     pub fn name(&self) -> &str {
@@ -201,9 +201,21 @@ impl Battery {
         self.inner.model_name()
     }
 
-    /// Returns the status of the battery.
-    pub fn status(&self) -> Option<BatteryStatus> {
-        self.inner.status()
+    /// Returns the output voltage, in µV, of the battery at this moment.
+    pub fn voltage_now(&self) -> Option<u64> {
+        self.inner.voltage_now()
+    }
+
+    /// Returns the output current, in µA, of the battery at this moment.
+    ///
+    /// On M series MacBooks, this value is only available when the battery is discharging.
+    pub fn current_now(&self) -> Option<u64> {
+        self.inner.current_now()
+    }
+
+    /// Returns the charge status of the battery.
+    pub fn charge_status(&self) -> Option<BatteryChargeStatus> {
+        self.inner.charge_status()
     }
 
     /// Returns the charge, in µAh, that the battery holds at this moment.
@@ -230,21 +242,11 @@ impl Battery {
     pub fn charge_control_end_threshold(&self) -> Option<u64> {
         self.inner.charge_control_end_threshold()
     }
-
-    /// Returns the output voltage of the battery at this moment.
-    pub fn voltage_now(&self) -> Option<u64> {
-        self.inner.voltage_now()
-    }
-
-    /// Returns the output current of the battery at this moment.
-    pub fn current_now(&self) -> Option<u64> {
-        self.inner.current_now()
-    }
 }
 
 /// Battery status.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BatteryStatus {
+pub enum BatteryChargeStatus {
     /// The battery is charging.
     Charging,
     /// The battery is discharging.
