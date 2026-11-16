@@ -42,3 +42,63 @@ pub(crate) fn parse_multi_string(bytes: &[u8]) -> Vec<String> {
         .filter_map(|v| String::from_utf16(v).ok())
         .collect()
 }
+
+cfg_select! {
+    any (
+        feature = "pci",
+        feature = "battery"
+    ) => {
+        use windows::Win32::Devices::DeviceAndDriverInstallation::{SetupDiDestroyDeviceInfoList, HDEVINFO};
+        pub(crate) struct DeviceInfoReleaser(HDEVINFO);
+
+        impl DeviceInfoReleaser {
+            pub(crate) fn new(hdevinfo: HDEVINFO) -> Self {
+                Self(hdevinfo)
+            }
+
+            #[inline]
+            pub(crate) fn inner(&self) -> HDEVINFO {
+                self.0
+            }
+        }
+
+        impl Drop for DeviceInfoReleaser {
+            fn drop(&mut self) {
+                unsafe {
+                    let _ = SetupDiDestroyDeviceInfoList(self.0);
+                }
+            }
+        }
+    },
+    _ => {}
+}
+
+cfg_select! {
+    any (
+        feature = "pci",
+        feature = "battery"
+    ) => {
+        use windows::Win32::Foundation::{CloseHandle, HANDLE};
+        pub(crate) struct FileHandleReleaser(HANDLE);
+
+        impl FileHandleReleaser {
+            pub(crate) fn new(handle: HANDLE) -> Self {
+                Self(handle)
+            }
+
+            #[inline]
+            pub(crate) fn inner(&self) -> HANDLE {
+                self.0
+            }
+        }
+
+        impl Drop for FileHandleReleaser {
+            fn drop(&mut self) {
+                unsafe {
+                    let _ = CloseHandle(self.0);
+                }
+            }
+        }
+    },
+    _ => {}
+}

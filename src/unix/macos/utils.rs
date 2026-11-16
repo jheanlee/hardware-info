@@ -54,15 +54,6 @@ cfg_select! {
     _ => {}
 }
 
-cfg_select! {
-    target_arch = "aarch64" => {
-        pub(crate) const IS_ARM: bool = true;
-    },
-    _ => {
-        pub(crate) const IS_ARM: bool = false;
-    }
-}
-
 #[cfg(any(feature = "pci", feature = "battery"))]
 pub(crate) fn read_ioreg_property_data(
     entry: objc2_io_kit::io_registry_entry_t,
