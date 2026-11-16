@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::sys::utils::{parse_multi_string, parse_string};
+use crate::sys::utils::{DeviceInfoReleaser, parse_multi_string, parse_string};
 use crate::utils::pci_vendor_name;
 use crate::{Error, PciAddress, PciBusSpeed, PciDevice, PciDeviceClass};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
     DIGCF_ALLCLASSES, DIGCF_PRESENT, HDEVINFO, SETUP_DI_REGISTRY_PROPERTY, SP_DEVINFO_DATA,
-    SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiDestroyDeviceInfoList,
-    SetupDiEnumDeviceInfo, SetupDiGetClassDevsW, SetupDiGetDevicePropertyW,
-    SetupDiGetDeviceRegistryPropertyW,
+    SPDRP_ADDRESS, SPDRP_BUSNUMBER, SPDRP_HARDWAREID, SPDRP_SERVICE, SetupDiEnumDeviceInfo,
+    SetupDiGetClassDevsW, SetupDiGetDevicePropertyW, SetupDiGetDeviceRegistryPropertyW,
 };
 use windows::Win32::Devices::Properties::{DEVPROP_TYPE_UINT32, DEVPROPTYPE};
 use windows::Win32::Foundation::{DEVPROPKEY, ERROR_NO_MORE_ITEMS, GetLastError};
@@ -40,6 +39,8 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
             return;
         };
 
+        let device_info = DeviceInfoReleaser::new(dev_info_set);
+
         let mut index: u32 = 0;
 
         loop {
@@ -50,7 +51,7 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 Reserved: 0,
             };
 
-            if SetupDiEnumDeviceInfo(dev_info_set, index, &mut dev_info_data).is_err() {
+            if SetupDiEnumDeviceInfo(device_info.inner(), index, &mut dev_info_data).is_err() {
                 let error = GetLastError();
                 if error == ERROR_NO_MORE_ITEMS {
                     break;
@@ -63,7 +64,7 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
             index += 1;
 
             let Some(hardware_ids) =
-                read_registry_property_vec(dev_info_set, &dev_info_data, SPDRP_HARDWAREID)
+                read_registry_property_vec(device_info.inner(), &dev_info_data, SPDRP_HARDWAREID)
             else {
                 continue;
             };
@@ -91,13 +92,13 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
             }
 
             let Some(bus) =
-                read_registry_property_u32(dev_info_set, &dev_info_data, SPDRP_BUSNUMBER)
+                read_registry_property_u32(device_info.inner(), &dev_info_data, SPDRP_BUSNUMBER)
                     .map(|v| v as u8)
             else {
                 continue;
             };
             let Some(address) =
-                read_registry_property_u32(dev_info_set, &dev_info_data, SPDRP_ADDRESS)
+                read_registry_property_u32(device_info.inner(), &dev_info_data, SPDRP_ADDRESS)
             else {
                 continue;
             };
@@ -109,15 +110,17 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 function: address as u8,
             };
 
-            let driver = read_registry_property_vec(dev_info_set, &dev_info_data, SPDRP_SERVICE)
-                .and_then(|v| parse_string(&v));
+            let driver =
+                read_registry_property_vec(device_info.inner(), &dev_info_data, SPDRP_SERVICE)
+                    .and_then(|v| parse_string(&v));
 
             let vendor_name = pci_vendor_name(vendor).map(str::to_string);
             let subsystem_vendor_name = subsystem_vendor
                 .and_then(pci_vendor_name)
                 .map(str::to_string);
 
-            let device_type = match read_device_property_u32(dev_info_set, &dev_info_data, 1) {
+            let device_type = match read_device_property_u32(device_info.inner(), &dev_info_data, 1)
+            {
                 Some(0 | 6) => Some(DeviceType::Pci),
                 Some(1 | 7) => Some(DeviceType::PciX),
                 Some(2..=4 | 8..=12 | 14) => Some(DeviceType::PciE),
@@ -126,14 +129,14 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
 
             let current_bus_speed = match device_type {
                 Some(DeviceType::Pci) => {
-                    match read_device_property_u32(dev_info_set, &dev_info_data, 2) {
+                    match read_device_property_u32(device_info.inner(), &dev_info_data, 2) {
                         Some(0) => Some(PciBusSpeed::Pci33Mhz),
                         Some(1) => Some(PciBusSpeed::Pci66Mhz),
                         _ => None,
                     }
                 }
                 Some(DeviceType::PciX) => {
-                    match read_device_property_u32(dev_info_set, &dev_info_data, 2) {
+                    match read_device_property_u32(device_info.inner(), &dev_info_data, 2) {
                         Some(0x0) => None, // PCI-X as PCI
                         Some(0x1 | 0x5) => Some(PciBusSpeed::PciX66Mhz),
                         Some(0x2 | 0x6) => Some(PciBusSpeed::PciX100Mhz),
@@ -148,7 +151,7 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                     }
                 }
                 Some(DeviceType::PciE) => {
-                    match read_device_property_u32(dev_info_set, &dev_info_data, 9) {
+                    match read_device_property_u32(device_info.inner(), &dev_info_data, 9) {
                         Some(1) => Some(PciBusSpeed::PcieGen1),
                         Some(2) => Some(PciBusSpeed::PcieGen2),
                         Some(3) => Some(PciBusSpeed::PcieGen3),
@@ -164,7 +167,7 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 Some(DeviceType::Pci) => None,  //  not available on Windows
                 Some(DeviceType::PciX) => None, //  not available on Windows
                 Some(DeviceType::PciE) => {
-                    match read_device_property_u32(dev_info_set, &dev_info_data, 11) {
+                    match read_device_property_u32(device_info.inner(), &dev_info_data, 11) {
                         Some(1) => Some(PciBusSpeed::PcieGen1),
                         Some(2) => Some(PciBusSpeed::PcieGen2),
                         Some(3) => Some(PciBusSpeed::PcieGen3),
@@ -179,13 +182,13 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
 
             let current_link_width = match device_type {
                 Some(DeviceType::PciE) => {
-                    read_device_property_u32(dev_info_set, &dev_info_data, 10)
+                    read_device_property_u32(device_info.inner(), &dev_info_data, 10)
                 }
                 _ => None,
             };
             let max_link_width = match device_type {
                 Some(DeviceType::PciE) => {
-                    read_device_property_u32(dev_info_set, &dev_info_data, 12)
+                    read_device_property_u32(device_info.inner(), &dev_info_data, 12)
                 }
                 _ => None,
             };
@@ -227,8 +230,6 @@ fn refresh_pci_devices(devices: &mut Vec<PciDevice>, remove_not_listed_devices: 
                 ));
             }
         }
-
-        let _ = SetupDiDestroyDeviceInfoList(dev_info_set);
     }
 
     if remove_not_listed_devices {

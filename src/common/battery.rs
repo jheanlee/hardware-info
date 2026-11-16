@@ -206,9 +206,9 @@ impl Battery {
         self.inner.voltage_now()
     }
 
-    /// Returns the output current, in µA, of the battery at this moment.
+    /// Returns the charge/discharge current, in µA, of the battery at this moment.
     ///
-    /// On M series MacBooks, this value is only available when the battery is discharging.
+    /// On Linux, this value is always the discharge current.
     pub fn current_now(&self) -> Option<u64> {
         self.inner.current_now()
     }

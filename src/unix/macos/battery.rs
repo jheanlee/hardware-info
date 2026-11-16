@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::sys::utils::{
-    IS_ARM, MAIN_PORT, get_cf_dictionary_i64, get_cf_dictionary_string, read_ioreg_property_bool,
+    MAIN_PORT, get_cf_dictionary_i64, get_cf_dictionary_string, read_ioreg_property_bool,
     read_ioreg_property_i64, read_ioreg_property_string,
 };
 use crate::{BatteriesInner, Battery, BatteryChargeStatus, Error};
@@ -100,12 +100,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
 
         //  Apple provide values in mV, mA and mAh
         let voltage_now = read_ioreg_property_i64(service, "Voltage").map(|v| v.unsigned_abs());
-        let current_now = if !IS_ARM || charge_status == Some(BatteryChargeStatus::Discharging) {
-            read_ioreg_property_i64(service, "Amperage").map(|v| v.unsigned_abs())
-        } else {
-            //  On M series, when charging, Amperage is the input current charging the battery.
-            None
-        };
+        let current_now = read_ioreg_property_i64(service, "Amperage").map(|v| v.unsigned_abs());
         let capacity_now = read_ioreg_property_i64(service, "AppleRawCurrentCapacity")
             .or_else(|| get_cf_dictionary_i64(&battery_data, "RemainingCapacity"))
             .map(|v| v.unsigned_abs());
