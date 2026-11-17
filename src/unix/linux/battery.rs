@@ -72,10 +72,6 @@ impl BatteriesInner {
         &self.batteries
     }
 
-    // pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
-    //     &mut self.batteries
-    // }
-
     pub(crate) fn refresh(&mut self, remove_not_listed_interfaces: bool) {
         refresh_battery_list_from_sysfs(&mut self.batteries, remove_not_listed_interfaces);
     }
@@ -96,6 +92,7 @@ pub(crate) struct BatteryInner {
     pub(crate) charge_control_end_threshold: Option<u64>,
     pub(crate) voltage_now: Option<u64>,
     pub(crate) current_now: Option<u64>,
+    pub(crate) cycle_count: Option<u64>,
     pub(crate) updated: bool,
 }
 
@@ -137,6 +134,7 @@ impl BatteryInner {
             read_unsigned(parent, "charge_control_end_threshold", &mut num_buf);
         self.voltage_now = read_unsigned(parent, "voltage_now", &mut num_buf);
         self.current_now = read_unsigned(parent, "current_now", &mut num_buf);
+        self.cycle_count = read_unsigned(parent, "cycle_count", &mut num_buf);
         self.updated = true;
     }
 
@@ -185,6 +183,10 @@ impl BatteryInner {
     pub fn current_now(&self) -> Option<u64> {
         self.current_now
     }
+
+    pub fn cycle_count(&self) -> Option<u32> {
+        self.cycle_count.map(|v| v as u32)
+    }
 }
 
 impl Default for BatteryInner {
@@ -203,6 +205,7 @@ impl Default for BatteryInner {
             charge_control_end_threshold: None,
             voltage_now: None,
             current_now: None,
+            cycle_count: None,
             updated: false,
         }
     }

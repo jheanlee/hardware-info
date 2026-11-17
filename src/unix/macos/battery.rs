@@ -113,6 +113,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
         let capacity_designed = read_ioreg_property_i64(service, "DesignCapacity")
             .or_else(|| get_cf_dictionary_i64(&battery_data, "DesignCapacity"))
             .map(|v| v.unsigned_abs());
+        let cycle_count = read_ioreg_property_i64(service, "CycleCount").map(|v| v.unsigned_abs());
 
         if let Some(existing_battery) = batteries.iter_mut().find(|b| b.inner.name == name) {
             let inner = &mut existing_battery.inner;
@@ -123,6 +124,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
             inner.capacity_now = capacity_now;
             inner.capacity_max = capacity_max;
             inner.capacity_designed = capacity_designed;
+            inner.cycle_count = cycle_count;
             inner.updated = true;
         } else {
             batteries.push(new_battery(
@@ -134,6 +136,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                 capacity_now,
                 capacity_max,
                 capacity_designed,
+                cycle_count,
             ));
         }
 
@@ -164,6 +167,7 @@ fn new_battery(
     capacity_now: Option<u64>,
     capacity_max: Option<u64>,
     capacity_designed: Option<u64>,
+    cycle_count: Option<u64>,
 ) -> Battery {
     Battery {
         inner: BatteryInner {
@@ -175,6 +179,7 @@ fn new_battery(
             capacity_now,
             capacity_max,
             capacity_designed,
+            cycle_count,
             updated: true,
         },
     }
@@ -210,6 +215,7 @@ pub(crate) struct BatteryInner {
     pub(crate) capacity_now: Option<u64>,
     pub(crate) capacity_max: Option<u64>,
     pub(crate) capacity_designed: Option<u64>,
+    pub(crate) cycle_count: Option<u64>,
     pub(crate) updated: bool,
 }
 
@@ -258,5 +264,9 @@ impl BatteryInner {
 
     pub(crate) fn current_now(&self) -> Option<u64> {
         Some(self.current_now?.saturating_mul(1000))
+    }
+
+    pub(crate) fn cycle_count(&self) -> Option<u32> {
+        self.cycle_count.map(|v| v as u32)
     }
 }
