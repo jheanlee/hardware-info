@@ -171,21 +171,6 @@ pub struct Battery {
 }
 
 impl Battery {
-    // /// Refreshes the battery's information.
-    // ///
-    // /// ```no_run
-    // /// use hardware_info::Batteries;
-    // ///
-    // /// if let Ok(mut batteries) = Batteries::new_with_refreshed_list() {
-    // ///     for battery in batteries.list_mut() {
-    // ///         battery.refresh();
-    // ///     }
-    // /// }
-    // /// ```
-    // pub fn refresh(&mut self) {
-    //     self.inner.refresh()
-    // }
-
     /// Returns the name of the battery.
     pub fn name(&self) -> &str {
         self.inner.name()
@@ -241,6 +226,11 @@ impl Battery {
     /// Returns the charge threshold, in µAh, at which the battery stops charging.
     pub fn charge_control_end_threshold(&self) -> Option<u64> {
         self.inner.charge_control_end_threshold()
+    }
+
+    /// Returns the cycle count.
+    pub fn cycle_count(&self) -> Option<u32> {
+        self.inner.cycle_count()
     }
 }
 

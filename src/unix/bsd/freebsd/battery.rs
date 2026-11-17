@@ -81,4 +81,8 @@ impl BatteryInner {
     pub(crate) fn current_now(&self) -> Option<u64> {
         None
     }
+
+    pub(crate) fn cycle_count(&self) -> Option<u32> {
+        None
+    }
 }

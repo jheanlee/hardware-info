@@ -187,6 +187,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                 } else {
                     (None, None)
                 };
+            let cycle_count = battery_information.CycleCount;
 
             let mut battery_status: BATTERY_STATUS = std::mem::zeroed();
 
@@ -302,6 +303,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                 inner.energy_full = full_capacity;
                 inner.energy_full_design = designed_capacity;
                 inner.charge_status = power_state;
+                inner.cycle_count = cycle_count;
                 inner.updated = true;
             } else {
                 batteries.push(new_battery(
@@ -314,6 +316,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                     designed_capacity,
                     voltage,
                     rate,
+                    cycle_count,
                 ));
             }
         }
@@ -352,6 +355,7 @@ fn new_battery(
     energy_full_design: Option<u32>,
     voltage_now: u32,
     wattage_now: i32,
+    cycle_count: u32,
 ) -> Battery {
     Battery {
         inner: BatteryInner {
@@ -364,6 +368,7 @@ fn new_battery(
             energy_full_design,
             voltage_now,
             wattage_now,
+            cycle_count,
             updated: true,
         },
     }
@@ -409,6 +414,7 @@ pub(crate) struct BatteryInner {
     energy_full_design: Option<u32>,
     voltage_now: u32,
     wattage_now: i32,
+    cycle_count: u32,
     updated: bool,
 }
 
@@ -455,5 +461,9 @@ impl BatteryInner {
 
     pub(crate) fn current_now(&self) -> Option<u64> {
         Some(mw_to_ua(self.wattage_now.unsigned_abs(), self.voltage_now))
+    }
+
+    pub(crate) fn cycle_count(&self) -> Option<u32> {
+        Some(self.cycle_count)
     }
 }
