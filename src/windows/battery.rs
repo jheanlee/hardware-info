@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::common::battery::BatteryChemistry;
 use crate::sys::utils::{DeviceInfoReleaser, FileHandleReleaser};
 use crate::{Battery, BatteryChargeStatus, Error};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
@@ -189,6 +190,21 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                 };
             let cycle_count = battery_information.CycleCount;
 
+            let chemistry = match str::from_utf8(&battery_information.Chemistry)
+                .ok()
+                .map(|s| s.trim())
+            {
+                Some("PbAc") => Some(BatteryChemistry::PbAcid),
+                Some("LION") | Some("Li-I") => Some(BatteryChemistry::LiIon),
+                Some("LiPL") => Some(BatteryChemistry::LiPoly),
+                Some("NiCd") => Some(BatteryChemistry::NiCd),
+                Some("NiMH") => Some(BatteryChemistry::NiMH),
+                Some("NiZn") => Some(BatteryChemistry::NiZn),
+                Some("RAM") => Some(BatteryChemistry::Ram),
+                None => None,
+                Some(c) => Some(BatteryChemistry::Unknown(c.to_string())),
+            };
+
             let mut battery_status: BATTERY_STATUS = std::mem::zeroed();
 
             let battery_wait_status = BATTERY_WAIT_STATUS {
@@ -304,6 +320,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                 inner.energy_full_design = designed_capacity;
                 inner.charge_status = power_state;
                 inner.cycle_count = cycle_count;
+                inner.chemistry = chemistry;
                 inner.updated = true;
             } else {
                 batteries.push(new_battery(
@@ -317,6 +334,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
                     voltage,
                     rate,
                     cycle_count,
+                    chemistry,
                 ));
             }
         }
@@ -356,6 +374,7 @@ fn new_battery(
     voltage_now: u32,
     wattage_now: i32,
     cycle_count: u32,
+    chemistry: Option<BatteryChemistry>,
 ) -> Battery {
     Battery {
         inner: BatteryInner {
@@ -369,6 +388,7 @@ fn new_battery(
             voltage_now,
             wattage_now,
             cycle_count,
+            chemistry,
             updated: true,
         },
     }
@@ -415,6 +435,7 @@ pub(crate) struct BatteryInner {
     voltage_now: u32,
     wattage_now: i32,
     cycle_count: u32,
+    chemistry: Option<BatteryChemistry>,
     updated: bool,
 }
 
@@ -465,5 +486,9 @@ impl BatteryInner {
 
     pub(crate) fn cycle_count(&self) -> Option<u32> {
         Some(self.cycle_count)
+    }
+
+    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+        self.chemistry.clone()
     }
 }

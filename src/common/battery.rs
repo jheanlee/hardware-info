@@ -232,6 +232,11 @@ impl Battery {
     pub fn cycle_count(&self) -> Option<u32> {
         self.inner.cycle_count()
     }
+
+    /// Returns the battery's chemistry.
+    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+        self.inner.chemistry()
+    }
 }
 
 /// Battery status.
@@ -246,4 +251,31 @@ pub enum BatteryChargeStatus {
     NotCharging,
     /// The battery is full.
     Full,
+}
+
+/// Battery chemistry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum BatteryChemistry {
+    /// Nickel–metal hydride battery.
+    NiMH,
+    /// Lithium-ion battery.
+    LiIon,
+    /// Lithium polymer battery.
+    LiPoly,
+    /// Lithium iron phosphate battery.
+    LiFe,
+    /// Nickel–cadmium battery.
+    NiCd,
+    /// Lithium-ion manganese oxide battery.
+    LiMn,
+    /// Lead-acid battery.
+    PbAcid,
+    /// Nickel–zinc battery.
+    NiZn,
+    /// Rechargeable alkaline battery.
+    Ram,
+    /// Zinc–air battery
+    ZnAir,
+    /// An unknown battery type.
+    Unknown(String),
 }

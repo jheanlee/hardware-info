@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::common::battery::BatteryChemistry;
 use crate::sys::utils::{read_str, read_unsigned};
 use crate::{BatteriesInner, Battery, BatteryChargeStatus, Error};
 
@@ -93,6 +94,7 @@ pub(crate) struct BatteryInner {
     pub(crate) voltage_now: Option<u64>,
     pub(crate) current_now: Option<u64>,
     pub(crate) cycle_count: Option<u64>,
+    pub(crate) chemistry: Option<BatteryChemistry>,
     pub(crate) updated: bool,
 }
 
@@ -135,6 +137,23 @@ impl BatteryInner {
         self.voltage_now = read_unsigned(parent, "voltage_now", &mut num_buf);
         self.current_now = read_unsigned(parent, "current_now", &mut num_buf);
         self.cycle_count = read_unsigned(parent, "cycle_count", &mut num_buf);
+        self.chemistry = match str::from_utf8(read_str(parent, "technology", &mut str_buf))
+            .ok()
+            .map(|s| s.trim())
+        {
+            Some("NiMH") => Some(BatteryChemistry::NiMH),
+            Some("Li-ion") => Some(BatteryChemistry::LiIon),
+            Some("Li-poly") => Some(BatteryChemistry::LiPoly),
+            Some("LiFe") => Some(BatteryChemistry::LiFe),
+            Some("NiCd") => Some(BatteryChemistry::NiCd),
+            Some("LiMn") => Some(BatteryChemistry::LiMn),
+            Some("PbAc") => Some(BatteryChemistry::PbAcid),
+            Some("NiZn") => Some(BatteryChemistry::NiZn),
+            Some("RAM") => Some(BatteryChemistry::Ram),
+            Some("ZnAr") => Some(BatteryChemistry::ZnAir),
+            Some("Unknown") | None => None,
+            Some(t) => Some(BatteryChemistry::Unknown(t.to_string())),
+        };
         self.updated = true;
     }
 
@@ -187,6 +206,10 @@ impl BatteryInner {
     pub fn cycle_count(&self) -> Option<u32> {
         self.cycle_count.map(|v| v as u32)
     }
+
+    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+        self.chemistry.clone()
+    }
 }
 
 impl Default for BatteryInner {
@@ -206,6 +229,7 @@ impl Default for BatteryInner {
             voltage_now: None,
             current_now: None,
             cycle_count: None,
+            chemistry: None,
             updated: false,
         }
     }
