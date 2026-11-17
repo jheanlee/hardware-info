@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::common::battery::BatteryChemistry;
 use crate::{BatteriesInner, Battery, BatteryChargeStatus, Error};
 
 impl BatteriesInner {
@@ -83,6 +84,10 @@ impl BatteryInner {
     }
 
     pub(crate) fn cycle_count(&self) -> Option<u32> {
+        None
+    }
+
+    pub fn chemistry(&self) -> Option<BatteryChemistry> {
         None
     }
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::common::battery::BatteryChemistry;
 use crate::sys::utils::{
     MAIN_PORT, get_cf_dictionary_i64, get_cf_dictionary_string, read_ioreg_property_bool,
     read_ioreg_property_i64, read_ioreg_property_string,
@@ -114,6 +115,7 @@ fn refresh_battery_list(batteries: &mut Vec<Battery>, remove_not_listed_devices:
             .or_else(|| get_cf_dictionary_i64(&battery_data, "DesignCapacity"))
             .map(|v| v.unsigned_abs());
         let cycle_count = read_ioreg_property_i64(service, "CycleCount").map(|v| v.unsigned_abs());
+        //  BatteryData -> ChemID available, but we don't know corresponding values
 
         if let Some(existing_battery) = batteries.iter_mut().find(|b| b.inner.name == name) {
             let inner = &mut existing_battery.inner;
@@ -268,5 +270,9 @@ impl BatteryInner {
 
     pub(crate) fn cycle_count(&self) -> Option<u32> {
         self.cycle_count.map(|v| v as u32)
+    }
+
+    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+        None
     }
 }
