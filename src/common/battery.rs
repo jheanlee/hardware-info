@@ -182,8 +182,8 @@ impl Battery {
     }
 
     /// Returns the model name of the battery.
-    pub fn model_name(&self) -> Option<&str> {
-        self.inner.model_name()
+    pub fn model(&self) -> Option<&str> {
+        self.inner.model()
     }
 
     /// Returns the output voltage, in µV, of the battery at this moment.

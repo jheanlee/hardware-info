@@ -62,3 +62,83 @@ pub struct pcisel {
     pub(crate) pc_dev: u8,
     pub(crate) pc_func: u8,
 }
+
+#[cfg(feature = "battery")]
+const ACPI_CMBAT_MAXSTRLEN: usize = 32;
+
+#[repr(C)]
+#[cfg(feature = "battery")]
+#[derive(Clone, Copy)]
+pub(crate) struct acpi_battinfo {
+    pub(crate) cap: libc::c_int,
+    pub(crate) min: libc::c_int,
+    pub(crate) state: libc::c_int,
+    pub(crate) rate: libc::c_int,
+}
+
+#[repr(C)]
+#[cfg(feature = "battery")]
+#[derive(Clone, Copy)]
+pub(crate) struct acpi_bif {
+    pub(crate) units: u32,
+    pub(crate) dcap: u32,
+    pub(crate) lfcap: u32,
+    pub(crate) btech: u32,
+    pub(crate) dvol: u32,
+    pub(crate) wcap: u32,
+    pub(crate) lcap: u32,
+    pub(crate) gra1: u32,
+    pub(crate) gra2: u32,
+    pub(crate) model: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) serial: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) type_: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) oeminfo: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+}
+
+#[repr(C)]
+#[cfg(feature = "battery")]
+#[derive(Clone, Copy)]
+pub(crate) struct acpi_bix {
+    pub(crate) units: u32,
+    pub(crate) dcap: u32,
+    pub(crate) lfcap: u32,
+    pub(crate) btech: u32,
+    pub(crate) dvol: u32,
+    pub(crate) wcap: u32,
+    pub(crate) lcap: u32,
+    pub(crate) gra1: u32,
+    pub(crate) gra2: u32,
+    pub(crate) model: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) serial: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) type_: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) oeminfo: [libc::c_char; ACPI_CMBAT_MAXSTRLEN],
+    pub(crate) rev: u16,
+    pub(crate) cycles: u32,
+    pub(crate) accuracy: u32,
+    pub(crate) stmax: u32,
+    pub(crate) stmin: u32,
+    pub(crate) aimax: u32,
+    pub(crate) aimin: u32,
+    pub(crate) scap: u32,
+    pub(crate) bix_reserved: [u8; 58],
+}
+
+#[repr(C)]
+#[cfg(feature = "battery")]
+#[derive(Clone, Copy)]
+pub(crate) struct acpi_bst {
+    pub(crate) state: u32,
+    pub(crate) rate: u32,
+    pub(crate) cap: u32,
+    pub(crate) volt: u32,
+}
+
+#[repr(C)]
+#[cfg(feature = "battery")]
+pub(crate) union acpi_battery_ioctl_arg {
+    pub(crate) unit: libc::c_int,
+    pub(crate) battinfo: acpi_battinfo,
+    pub(crate) bix: acpi_bix,
+    pub(crate) bif: acpi_bif,
+    pub(crate) bst: acpi_bst,
+}

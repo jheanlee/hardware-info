@@ -112,9 +112,11 @@ impl BatteryInner {
 
         self.manufacturer = str::from_utf8(read_str(parent, "manufacturer", &mut str_buf))
             .ok()
+            .map(|s| s.trim())
             .map(str::to_string);
         self.model_name = str::from_utf8(read_str(parent, "model_name", &mut str_buf))
             .ok()
+            .map(|s| s.trim())
             .map(str::to_string);
 
         self.status = match read_str(parent, "status", &mut str_buf) {
@@ -157,57 +159,57 @@ impl BatteryInner {
         self.updated = true;
     }
 
-    pub fn name(&self) -> &str {
+    pub(crate) fn name(&self) -> &str {
         self.name.as_str()
     }
 
-    pub fn manufacturer(&self) -> Option<&str> {
+    pub(crate) fn manufacturer(&self) -> Option<&str> {
         self.manufacturer.as_deref()
     }
 
-    pub fn model_name(&self) -> Option<&str> {
+    pub(crate) fn model(&self) -> Option<&str> {
         self.model_name.as_deref()
     }
 
-    pub fn charge_status(&self) -> Option<BatteryChargeStatus> {
+    pub(crate) fn charge_status(&self) -> Option<BatteryChargeStatus> {
         self.status
     }
 
-    pub fn charge_now(&self) -> Option<u64> {
+    pub(crate) fn charge_now(&self) -> Option<u64> {
         self.charge_now
     }
 
-    pub fn charge_full(&self) -> Option<u64> {
+    pub(crate) fn charge_full(&self) -> Option<u64> {
         self.charge_full
             .map(|v| v.saturating_sub(self.charge_empty.unwrap_or(0)))
     }
 
-    pub fn charge_full_design(&self) -> Option<u64> {
+    pub(crate) fn charge_full_design(&self) -> Option<u64> {
         self.charge_full_design
             .map(|v| v.saturating_sub(self.charge_empty_design.unwrap_or(0)))
     }
 
-    pub fn charge_control_start_threshold(&self) -> Option<u64> {
+    pub(crate) fn charge_control_start_threshold(&self) -> Option<u64> {
         self.charge_control_start_threshold
     }
 
-    pub fn charge_control_end_threshold(&self) -> Option<u64> {
+    pub(crate) fn charge_control_end_threshold(&self) -> Option<u64> {
         self.charge_control_end_threshold
     }
 
-    pub fn voltage_now(&self) -> Option<u64> {
+    pub(crate) fn voltage_now(&self) -> Option<u64> {
         self.voltage_now
     }
 
-    pub fn current_now(&self) -> Option<u64> {
+    pub(crate) fn current_now(&self) -> Option<u64> {
         self.current_now
     }
 
-    pub fn cycle_count(&self) -> Option<u32> {
+    pub(crate) fn cycle_count(&self) -> Option<u32> {
         self.cycle_count.map(|v| v as u32)
     }
 
-    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+    pub(crate) fn chemistry(&self) -> Option<BatteryChemistry> {
         self.chemistry.clone()
     }
 }

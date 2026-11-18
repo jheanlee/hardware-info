@@ -448,7 +448,7 @@ impl BatteryInner {
         self.manufacturer.as_deref()
     }
 
-    pub(crate) fn model_name(&self) -> Option<&str> {
+    pub(crate) fn model(&self) -> Option<&str> {
         self.model_name.as_deref()
     }
 
@@ -477,7 +477,7 @@ impl BatteryInner {
     }
 
     pub(crate) fn voltage_now(&self) -> Option<u64> {
-        Some(self.voltage_now.saturating_mul(1000) as u64)
+        Some((self.voltage_now as u64).saturating_mul(1000))
     }
 
     pub(crate) fn current_now(&self) -> Option<u64> {
@@ -488,7 +488,7 @@ impl BatteryInner {
         Some(self.cycle_count)
     }
 
-    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+    pub(crate) fn chemistry(&self) -> Option<BatteryChemistry> {
         self.chemistry.clone()
     }
 }
