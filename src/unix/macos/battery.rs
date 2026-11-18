@@ -232,7 +232,7 @@ impl BatteryInner {
         None
     }
 
-    pub(crate) fn model_name(&self) -> Option<&str> {
+    pub(crate) fn model(&self) -> Option<&str> {
         self.model_name.as_deref()
     }
 
@@ -272,7 +272,7 @@ impl BatteryInner {
         self.cycle_count.map(|v| v as u32)
     }
 
-    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+    pub(crate) fn chemistry(&self) -> Option<BatteryChemistry> {
         None
     }
 }

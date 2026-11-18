@@ -54,7 +54,7 @@ impl BatteryInner {
         None
     }
 
-    pub(crate) fn model_name(&self) -> Option<&str> {
+    pub(crate) fn model(&self) -> Option<&str> {
         None
     }
 
@@ -94,7 +94,7 @@ impl BatteryInner {
         None
     }
 
-    pub fn chemistry(&self) -> Option<BatteryChemistry> {
+    pub(crate) fn chemistry(&self) -> Option<BatteryChemistry> {
         None
     }
 }

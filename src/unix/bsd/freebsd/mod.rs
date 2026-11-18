@@ -33,7 +33,7 @@ cfg_select! {
     _ => {}
 }
 
-#[cfg(feature = "pci")]
+#[cfg(any(feature = "pci", feature = "battery"))]
 pub(crate) mod ffi;
 
 // Make formattable by rustfmt.
