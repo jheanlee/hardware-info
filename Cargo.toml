@@ -73,3 +73,9 @@ name = "pci"
 path = "examples/pci.rs"
 required-features = ["pci"]
 doc-scrape-examples = true
+
+[[example]]
+name = "battery"
+path = "examples/battery.rs"
+required-features = ["battery"]
+doc-scrape-examples = true

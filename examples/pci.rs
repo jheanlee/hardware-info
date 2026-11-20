@@ -19,11 +19,14 @@
 use hardware_info::PciDevices;
 
 fn format_optional<T: std::fmt::Display>(value: Option<T>) -> String {
-    value.map_or_else(|| "None".to_string(), |value| value.to_string())
+    value.map_or_else(|| "(not available)".to_string(), |value| value.to_string())
 }
 
 fn format_optional_hex(value: Option<impl std::fmt::LowerHex>) -> String {
-    value.map_or_else(|| "None".to_string(), |value| format!("{value:04x}"))
+    value.map_or_else(
+        || "(not available)".to_string(),
+        |value| format!("{value:04x}"),
+    )
 }
 
 fn main() {
@@ -54,8 +57,8 @@ fn main() {
                 format_optional_hex(pci_device.subsystem_device_id())
             );
         } else {
-            println!("Subsystem vendor: None");
-            println!("Subsystem device ID: None");
+            println!("Subsystem vendor: (not available)");
+            println!("Subsystem device ID: (not available)");
         }
 
         println!("Revision: {}", format_optional(pci_device.revision()));
@@ -82,7 +85,7 @@ fn main() {
                 max_rate_per_lane * max_link_width
             );
         } else {
-            println!("PCIe bus total speed: not available");
+            println!("PCIe bus total speed: (not available)");
         }
     }
 }

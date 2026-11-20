@@ -42,7 +42,8 @@ loop {
 }
 ```
 
-More examples can be found in the [`examples`](https://github.com/jheanlee/hardware-info/tree/master/examples)
+Detailed examples and examples for other features can be found in the [
+`examples`](https://github.com/jheanlee/hardware-info/tree/master/examples)
 directory.
 
 ## Related Crates
