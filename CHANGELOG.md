@@ -2,6 +2,7 @@
 
 - Added the `battery` feature.
 - Added `Battery`, `Batteries`, `BatteryChargeStatus` and `BatteryChemistry`, along with their associated functions.
+- Implemented `Display` for `PciBusSpeed`.
 
 # 0.1.0
 

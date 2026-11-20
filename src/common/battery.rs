@@ -352,7 +352,9 @@ impl Battery {
     ///
     /// if let Ok(batteries) = Batteries::new_with_refreshed_list() {
     ///     for battery in batteries.list() {
-    ///         println!("Chemistry: {:?}", battery.chemistry());
+    ///         if let Some(chemistry) = battery.chemistry() {
+    ///             println!("Chemistry: {chemistry}");
+    ///         }
     ///     }
     /// }
     /// ```

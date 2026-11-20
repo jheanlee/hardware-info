@@ -141,7 +141,7 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{}", pci_device.address());
+    ///         println!("PCI address: {}", pci_device.address());
     ///     }
     /// }
     /// ```
@@ -156,7 +156,7 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:04x}", pci_device.vendor_id());
+    ///         println!("Vendor ID: {:04x}", pci_device.vendor_id());
     ///     }
     /// }
     /// ```
@@ -166,14 +166,16 @@ impl PciDevice {
 
     /// Returns the vendor name of the PCI device.
     ///
-    /// Returns `None` if the information cannot be retrieved or cannot be not found in the database.
+    /// Returns `None` if the information cannot be retrieved or cannot be found in the database.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.vendor_name());
+    ///         if let Some(vendor_name) = pci_device.vendor_name() {
+    ///             println!("Vendor name: {vendor_name}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -190,7 +192,7 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:04x}", pci_device.device_id());
+    ///         println!("Device ID: {:04x}", pci_device.device_id());
     ///     }
     /// }
     /// ```
@@ -204,16 +206,15 @@ impl PciDevice {
     /// system integrating it), while the vendor is typically responsible for the device or chip.
     ///
     /// Returns `None` if the information cannot be retrieved. It is rather common for manufacturers
-    /// to not provide `subsystem_*` fields.
+    /// not to provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.subsystem_vendor_id() {
-    ///             Some(subsystem_vendor_id) => { println!("{:04x}", subsystem_vendor_id); },
-    ///             None => { println!("Not available"); }
+    ///         if let Some(subsystem_vendor_id) = pci_device.subsystem_vendor_id() {
+    ///             println!("Subsystem vendor ID: {subsystem_vendor_id:04x}");
     ///         }
     ///     }
     /// }
@@ -228,14 +229,16 @@ impl PciDevice {
     /// system integrating it), while the vendor is typically responsible for the device or chip.
     ///
     /// Returns `None` if the information cannot be retrieved or cannot be found in the database. It
-    /// is rather common for manufacturers to not provide `subsystem_*` fields.
+    /// is rather common for manufacturers not to provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.subsystem_vendor_name());
+    ///         if let Some(subsystem_vendor_name) = pci_device.subsystem_vendor_name() {
+    ///             println!("Subsystem vendor name: {subsystem_vendor_name}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -245,20 +248,19 @@ impl PciDevice {
 
     /// Returns the subsystem device ID of the PCI device.
     ///
-    /// It is often used together with the subsystem vendor id to identify the system or board
+    /// It is often used together with the subsystem vendor ID to identify the system or board
     /// implementing the PCI device.
     ///
     /// Returns `None` if the information cannot be retrieved. It is rather common for manufacturers
-    /// to not provide `subsystem_*` fields.
+    /// not to provide `subsystem_*` fields.
     ///
     /// ```no_run
     /// use hardware_info::PciDevices;
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.subsystem_device_id() {
-    ///             Some(subsystem_device_id) => { println!("{:04x}", subsystem_device_id); },
-    ///             None => { println!("Not available"); }
+    ///         if let Some(subsystem_device_id) = pci_device.subsystem_device_id() {
+    ///             println!("Subsystem device ID: {subsystem_device_id:04x}");
     ///         }
     ///     }
     /// }
@@ -276,9 +278,8 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         match pci_device.class() {
-    ///             Some(class) => { println!("{class}"); },
-    ///             None => { println!("Not available"); }
+    ///         if let Some(class) = pci_device.class() {
+    ///             println!("Device class: {class}");
     ///         }
     ///     }
     /// }
@@ -296,7 +297,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.revision());
+    ///         if let Some(revision) = pci_device.revision() {
+    ///             println!("Device revision: {revision}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -322,7 +325,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.driver());
+    ///         if let Some(driver) = pci_device.driver() {
+    ///             println!("Driver: {driver}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -341,7 +346,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.current_bus_speed());
+    ///         if let Some(speed) = pci_device.current_bus_speed() {
+    ///             println!("Current bus speed: {speed}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -360,7 +367,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.max_bus_speed());
+    ///         if let Some(speed) = pci_device.max_bus_speed() {
+    ///             println!("Maximum bus speed: {speed}");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -379,7 +388,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.current_link_width());
+    ///         if let Some(width) = pci_device.current_link_width() {
+    ///             println!("Current PCIe link width: {width} lanes");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -398,7 +409,9 @@ impl PciDevice {
     ///
     /// if let Ok(pci_devices) = PciDevices::new_with_refreshed_list() {
     ///     for pci_device in pci_devices.list() {
-    ///         println!("{:?}", pci_device.max_link_width());
+    ///         if let Some(width) = pci_device.max_link_width() {
+    ///             println!("Maximum PCIe link width: {width} lanes");
+    ///         }
     ///     }
     /// }
     /// ```
@@ -637,6 +650,38 @@ impl PciBusSpeed {
             PciBusSpeed::PcieGen6 => Some(64_000),
             PciBusSpeed::PcieOther(rate) => Some(rate),
             _ => None,
+        }
+    }
+}
+
+impl std::fmt::Display for PciBusSpeed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PciBusSpeed::Pci33Mhz => write!(f, "PCI 33 MHz"),
+            PciBusSpeed::Pci66Mhz => write!(f, "PCI 66 MHz"),
+            PciBusSpeed::PciX66Mhz => write!(f, "PCI-X 66 MHz"),
+            PciBusSpeed::PciX100Mhz => write!(f, "PCI-X 100 MHz"),
+            PciBusSpeed::PciX133Mhz => write!(f, "PCI-X 133 MHz"),
+            PciBusSpeed::PciX266_66Mhz => write!(f, "PCI-X 266 66 MHz"),
+            PciBusSpeed::PciX266_100Mhz => write!(f, "PCI-X 266 100 MHz"),
+            PciBusSpeed::PciX266_133Mhz => write!(f, "PCI-X 266 133 MHz"),
+            PciBusSpeed::PciX533_66Mhz => write!(f, "PCI-X 533 66 MHz"),
+            PciBusSpeed::PciX533_100Mhz => write!(f, "PCI-X 533 100 MHz"),
+            PciBusSpeed::PciX533_133Mhz => write!(f, "PCI-X 533 133 MHz"),
+            PciBusSpeed::AgpUnknown => write!(f, "AGP unknown"),
+            PciBusSpeed::Agp1x => write!(f, "AGP 1x"),
+            PciBusSpeed::Agp2x => write!(f, "AGP 2x"),
+            PciBusSpeed::Agp4x => write!(f, "AGP 4x"),
+            PciBusSpeed::Agp8x => write!(f, "AGP 8x"),
+            PciBusSpeed::PcieGen1 => write!(f, "PCIe Gen 1"),
+            PciBusSpeed::PcieGen2 => write!(f, "PCIe Gen 2"),
+            PciBusSpeed::PcieGen3 => write!(f, "PCIe Gen 3"),
+            PciBusSpeed::PcieGen4 => write!(f, "PCIe Gen 4"),
+            PciBusSpeed::PcieGen5 => write!(f, "PCIe Gen 5"),
+            PciBusSpeed::PcieGen6 => write!(f, "PCIe Gen 6"),
+            PciBusSpeed::PcieOther(rate) => {
+                write!(f, "PCIe {} MT/s ", rate)
+            }
         }
     }
 }
