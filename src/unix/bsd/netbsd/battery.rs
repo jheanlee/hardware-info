@@ -26,10 +26,6 @@ impl BatteriesInner {
         &[]
     }
 
-    // pub(crate) fn list_mut(&mut self) -> &mut [Battery] {
-    //     &mut []
-    // }
-
     pub(crate) fn refresh(&mut self, _remove_not_listed_interfaces: bool) {}
 }
 
@@ -37,8 +33,6 @@ impl BatteriesInner {
 pub(crate) struct BatteryInner {}
 
 impl BatteryInner {
-    // pub(crate) fn refresh(&mut self) {}
-
     pub(crate) fn name(&self) -> &str {
         ""
     }

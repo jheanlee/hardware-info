@@ -12,6 +12,13 @@ A cross-platform library for fetching hardware information.
 - NetBSD
 - Windows
 
+## Features
+
+`hardware-info` provides the following information:
+
+- PCI enumeration and information
+- Battery enumeration and information
+
 ## Example
 
 Here is an example of listing all PCI devices and their addresses every 5 seconds:
